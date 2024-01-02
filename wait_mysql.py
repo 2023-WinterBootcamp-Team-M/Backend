@@ -4,7 +4,7 @@ import logging
 
 
 def mysql_is_ready():
-    check_timeout = 100
+    check_timeout = 60
     check_interval = 5
 
     start_time = time()

@@ -2,3 +2,4 @@ dJango==4.2.8
 django-environ==0.10.0
 mysqlclient==2.2.0
 PyMySQL==1.1.0
+cryptography==41.0.7
