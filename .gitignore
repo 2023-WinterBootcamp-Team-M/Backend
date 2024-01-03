@@ -2,3 +2,7 @@
 db.sqlite3
 .DS_Store
 .env
+*.log
+*.pot
+*.pyc
+__pycache__/

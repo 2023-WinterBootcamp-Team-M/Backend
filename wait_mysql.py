@@ -2,7 +2,6 @@ import pymysql
 from time import time, sleep
 import logging
 
-
 def mysql_is_ready():
     check_timeout = 60
     check_interval = 5
@@ -14,7 +13,7 @@ def mysql_is_ready():
 
     while time() - start_time < check_timeout:
         try:
-            pymysql.connect(host='mysqldb', port=3306, user='root', password='12345678', db='ClipBook')
+            pymysql.connect(host='mysqldb', port=3306, user='root', password='12345678', db='ClipTab')
             print("Connected Successfully.")
             return True
 
