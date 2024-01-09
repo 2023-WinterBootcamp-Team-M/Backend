@@ -8,7 +8,7 @@ class UserSerializer(serializers.ModelSerializer):
         # 어쨌든 필드의 값은 나중에 UserSerializer로 data를 간단하게 다룰 때 필요
         # 구글 소셜 로그인을 한다고 생각했을 때, 우리 DB로 그 내용을 옮긴다면
         # 이 3가지 필드 외에는 쓸 일이 없다고 생각 (생수삭은 제외해도 될듯)
-        fields = ['id', 'name', 'email']
+        fields = '__all__'
 
 class FolderSerializer(serializers.ModelSerializer):
     class Meta:
@@ -22,6 +22,18 @@ class BookmarkSerializer(serializers.ModelSerializer):
         # 음 우선 folder_id가 필요할까? 나중에
         fields = '__all__'
 
+
+# class get_BookmarkSerializer(serializers.ModelSerializer):
+#     class Meta:
+#         model = Bookmark
+#         fields = ['']
+#
+# class get_FolderSerializer(serializers.ModelSerializer):
+#     class Meta:
+#         model = BookmarkFolder
+#         fields = ['']
+
+
 class FolderCreateSerializer(serializers.ModelSerializer):
     class Meta:
         model = BookmarkFolder
@@ -32,7 +44,7 @@ class BookmarkCreateSerializer(serializers.ModelSerializer):
         model = Bookmark
         fields = ['id', 'folder_id','name', 'url', 'icon']
 
-class put_delete_BookmarkSerializer(serializers.ModelSerializer):
+class update_delete_BookmarkSerializer(serializers.ModelSerializer):
     class Meta:
         model = Bookmark
         fields = ['folder_id','name', 'url', 'icon']
