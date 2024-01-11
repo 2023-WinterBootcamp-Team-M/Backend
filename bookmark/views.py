@@ -234,7 +234,7 @@ def update_bookmark(request, folder_id, bookmark_id):
 def update_folder(request, folder_id):
     try:
         folder = BookmarkFolder.objects.get(id=folder_id)
-        new_name = request.data.get('new_name', folder.name)
+        new_name = request.data.get('name', folder.name)
 
         folder.name = new_name
         folder.updated_at = timezone.now()
