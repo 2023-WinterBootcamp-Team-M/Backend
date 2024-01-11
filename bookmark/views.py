@@ -229,7 +229,7 @@ def update_bookmark(request, folder_id, bookmark_id):
     except Bookmark.DoesNotExist:
         return Response({'error': 'Bookmark not found'}, status=status.HTTP_404_NOT_FOUND)
 
-@swagger_auto_schema(method='PATCH', request_body=FolderSerializer)
+@swagger_auto_schema(method='PATCH', request_body=update_delete_FolderSerializer)
 @api_view(['PATCH'])
 def update_folder(request, folder_id):
     try:
@@ -272,7 +272,7 @@ def delete_folder(request, folder_id):
 
 
 
-@swagger_auto_schema(method = "get", response_body=BookmarkSerializer)
+@swagger_auto_schema(method = "get", response_body=favorite_BookmarkSerializer)
 @api_view(['GET'])
 def favorite_bookmark_list(request,user_id):
     try:
