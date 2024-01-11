@@ -18,8 +18,6 @@ class FolderSerializer(serializers.ModelSerializer):
 class BookmarkSerializer(serializers.ModelSerializer):
     class Meta:
         model = Bookmark
-        # 북마크 필드는 folder_id(fk), url, icon, name, is_connected, 생수삭
-        # 음 우선 folder_id가 필요할까? 나중에
         fields = '__all__'
 
 
@@ -43,11 +41,19 @@ class BookmarkCreateSerializer(serializers.ModelSerializer):
     class Meta:
         model = Bookmark
         fields = ['id', 'folder_id','name', 'url', 'icon']
-
+class move_BookmarkSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Bookmark
+        fields = ['id', 'folder_id']
 class update_delete_BookmarkSerializer(serializers.ModelSerializer):
     class Meta:
         model = Bookmark
-        fields = ['folder_id','name', 'url', 'icon']
+        fields = []
+
+class patch_delete_FolderSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = BookmarkFolder
+        fields = ['id', '']
 # class delete_bookmarkSerializer(serializers.ModelSerializer):
 #     class Meta:
 #         model = Bookmark
@@ -58,3 +64,7 @@ class update_delete_BookmarkSerializer(serializers.ModelSerializer):
 #         model = Bookmark
 #         fields = ['name']
 
+class favorite_BookmarkSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Bookmark
+        fields = ['id', 'name','url','icon']
