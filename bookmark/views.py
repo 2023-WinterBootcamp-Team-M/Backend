@@ -11,7 +11,8 @@ from bookmark.serializer import *
 from drf_yasg.utils import swagger_auto_schema
 from rest_framework.decorators import api_view
 from django.db.models import Prefetch
-@swagger_auto_schema(method='post', request_body=UserSerializer)
+@swagger_auto_schema(method='post', request_body=UserSerializer,
+                     operation_summary="임시적인 회원 생성", tags=['회원관리'],)
 # Create your views here.
 @api_view(['POST'])
 def create_User(request):
@@ -24,7 +25,8 @@ def create_User(request):
 
 # 폴더 생성 API
 # 수정 필요
-@swagger_auto_schema(method = "post", request_body = FolderSerializer)
+@swagger_auto_schema(method = "post", request_body = FolderSerializer,
+                     tags=['폴더 관련'],operation_summary="폴더 생성")
 @api_view(['POST'])
 def create_folder(request):
     data = request.data
@@ -47,7 +49,8 @@ def create_folder(request):
 # 북마크 폴더 리스트 조회(사용자가 북마크 패널 사용 시 처음 보게 되는 화면)
 # chrome.bookmark API가 DRF에 어떤 식으로 값을 던지는 지 알아야 함.
 # 오히려 user_id를 fk로 참조하는게 나을수도 있음 -> 일단 지금 현재는 괜찮긴 함
-@swagger_auto_schema(method = "get", response_body = FolderSerializer)
+@swagger_auto_schema(method = "get", response_body = FolderSerializer,
+                     tags=['폴더 관련'],operation_summary="유저의 폴더 조회")
 @api_view(['GET'])
 def get_folders(request, user_id):
     try:
@@ -62,7 +65,8 @@ def get_folders(request, user_id):
 # 폴더 내의 북마크 리스트 조회임
 # folder_id는 다 따로임. 유저별 중복이 발생하지 X
 # 여기서 중요한게 folder_id를 fk로 참조하고 있기 때문에 폴더가 같으면 fk도 같음
-@swagger_auto_schema(method = "get", response_body = BookmarkSerializer)
+@swagger_auto_schema(method = "get", response_body = BookmarkSerializer,
+                     tags=['북마크 관련'],operation_summary="특정 폴더 내부의 북마크 조회")
 @api_view(['GET'])
 def get_bookmarks_in_folder(request, folder_id):
     try:
@@ -80,7 +84,8 @@ def get_bookmarks_in_folder(request, folder_id):
 # 북마크 생성 API
 # 크롬북마크 API -> DRF -> Open ai API -> 북마크 분류 API
 # api 가 던져준 북마크 name에 넣어져야 함
-@swagger_auto_schema(method='post',request_body=BookmarkSerializer)
+@swagger_auto_schema(method='post',request_body=BookmarkSerializer,
+                     tags=['북마크 관련'],operation_summary="북마크 생성")
 @api_view(['POST'])
 def create_bookmark(request):
     data = request.data
@@ -106,7 +111,8 @@ def create_bookmark(request):
 # 북마크 삭제 API
 # 일단 우리가 아는 삭제가 아님 -> 기술적 삭제임 즉 deleted_at이 NULL이 아님.
 # 삭제했던 것을 다시 부활시키면 Null로 해줘
-@swagger_auto_schema(method='delete', response_body=BookmarkSerializer)
+@swagger_auto_schema(method='delete', response_body=BookmarkSerializer,
+                     tags=['북마크 관련'],operation_summary="북마크 삭제")
 @api_view(['DELETE'])
 def delete_bookmark(request, folder_id, bookmark_id):
     try:
@@ -130,50 +136,10 @@ def delete_bookmark(request, folder_id, bookmark_id):
     except Bookmark.DoesNotExist:
         return Response({'error': 'Bookmark not found.'}, status=status.HTTP_404_NOT_FOUND)
 
-# 북마크 수정 API
-# 왜 있어야 할까?
-# -> 만약 gpt가 연관성 없는 북마크들을 따로 기타 북마크로 모았는데, 그게 바뀌면 수정되야 함
-# -> 이걸 고려하면 PUT이 맞을 수도 있을 것 같음.
-# @swagger_auto_schema(method='patch',request_body= BookmarkSerializer)
-# @api_view(['PATCH'])
-# def update_bookmark(request, folder_id, bookmark_id):
-#     # 넘겨준 폴더 아이디, 북마크 아이디를 토대로
-#     # 기존에 DB에 등록된 A폴더, 그리고 그 폴더의 a북마크를 서치
-#
-#     folder = BookmarkFolder.objects.get(pk=folder_id)
-#     bookmark = Bookmark.objects.get(pk=bookmark_id, folder_id=folder_id)
-#
-#     # request data from client
-#     data = request.data
-#     # 클라이언트에게 받은 데이터의 폴더 아이디 부분을 기존의 폴더 아이디에 저장
-#     # 즉 북마크 이동의 역할을 대신함
-#     # folder.id = data['folder_id']
-#
-#     serializer = BookmarkSerializer(instance=bookmark, data=data, partial=True)
-#
-#     if serializer.is_valid():
-#         new_url = serializer.validated_data.get('url', bookmark.url)
-#         new_name = serializer.validated_data.get('name', bookmark.name)
-#
-#         # URL과 name이 기존에 등록된 DB의 다른 북마크들과 겹치지 않도록 함
-#         if Bookmark.objects.filter(folder_id=folder, url=new_url).exclude(pk=bookmark.id).exists():
-#             return Response({'error': 'Bookmark with the same URL already exists in the folder.'}, status=status.HTTP_400_BAD_REQUEST)
-#         if Bookmark.objects.filter(folder_id=folder, name=new_name).exclude(pk=bookmark.id).exists():
-#             return Response({'error': 'Bookmark with the same name already exists in the folder.'}, status=status.HTTP_400_BAD_REQUEST)
-#
-#         # 바뀌었어야 저장하는 의미가 있으니
-#         # 조건문을 거쳐 둘 중 하나라도 바뀌었으면 저장하도록 함
-#         if new_url != bookmark.url or new_name != bookmark.name:
-#             serializer.save()
-#             return Response(serializer.data, status=status.HTTP_200_OK)
-#         else:
-#             return Response({'message': 'No changes to save'}, status=status.HTTP_304_NOT_MODIFIED)
-#
-#     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-#
 
 # 북마크 폴더 이동 함수
-@swagger_auto_schema(method='patch', request_body=move_BookmarkSerializer)
+@swagger_auto_schema(method='patch', request_body=move_BookmarkSerializer,
+                     tags=['북마크 관련'],operation_summary='북마크 이동(다른 폴더로 옮기기)')
 @api_view(['PATCH'])
 def move_bookmark(request, folder_id, bookmark_id):
     try:
@@ -199,7 +165,8 @@ def move_bookmark(request, folder_id, bookmark_id):
 
 
 # 북마크 이름, url을 수정할 수 있는 함수
-@swagger_auto_schema(method = "patch", request_body=update_delete_BookmarkSerializer)
+@swagger_auto_schema(method = "patch", request_body=update_delete_BookmarkSerializer,
+                     tags=['북마크 관련'], operation_summary='북마크 수정(이름, url)')
 @api_view(['PATCH'])
 def update_bookmark(request, folder_id, bookmark_id):
     try:
@@ -214,11 +181,15 @@ def update_bookmark(request, folder_id, bookmark_id):
             new_name = serializer.validated_data.get('name', bookmark.name)
 
             # 기존과 동일한 'url' 또는 'name'을 가진 다른 북마크가 있는지 확인
-            if Bookmark.objects.filter(folder_id=folder_id, url=new_url, deleted_at__isnull=True).exclude(id=bookmark.id).exists():
-                return Response({'error': 'This URL is already associated with another bookmark in the same folder.'}, status=status.HTTP_400_BAD_REQUEST)
+            if Bookmark.objects.filter(folder_id=folder_id, url=new_url,
+                                       deleted_at__isnull=True).exclude(id=bookmark.id).exists():
+                return Response({'error': 'This URL is already associated with another bookmark in the same folder.'},
+                                status=status.HTTP_400_BAD_REQUEST)
 
-            if Bookmark.objects.filter(folder_id=folder_id, name=new_name, deleted_at__isnull=True).exclude(id=bookmark.id).exists():
-                return Response({'error': 'This name is already associated with another bookmark in the same folder.'}, status=status.HTTP_400_BAD_REQUEST)
+            if Bookmark.objects.filter(folder_id=folder_id, name=new_name,
+                                       deleted_at__isnull=True).exclude(id=bookmark.id).exists():
+                return Response({'error': 'This name is already associated with another bookmark in the same folder.'},
+                                status=status.HTTP_400_BAD_REQUEST)
 
             # 유효성 검사를 통과하고 중복이 없으면 저장
             serializer.save()
@@ -229,7 +200,8 @@ def update_bookmark(request, folder_id, bookmark_id):
     except Bookmark.DoesNotExist:
         return Response({'error': 'Bookmark not found'}, status=status.HTTP_404_NOT_FOUND)
 
-@swagger_auto_schema(method='PATCH', request_body=update_delete_FolderSerializer)
+@swagger_auto_schema(method='PATCH', request_body=update_delete_FolderSerializer,
+                     tags=['폴더 관련'], operation_summary='폴더 이름 수정')
 @api_view(['PATCH'])
 def update_folder(request, folder_id):
     try:
@@ -247,7 +219,8 @@ def update_folder(request, folder_id):
     except BookmarkFolder.DoesNotExist:
         return Response({'error': 'Folder not found'}, status=status.HTTP_404_NOT_FOUND)
 
-@swagger_auto_schema(method='DELETE', response_body='Success')
+@swagger_auto_schema(method='DELETE', response_body='Success',
+                     tags=['폴더 관련'],operation_summary='폴더와 종속된 북마크 삭제')
 @api_view(['DELETE'])
 def delete_folder(request, folder_id):
     try:
@@ -272,7 +245,8 @@ def delete_folder(request, folder_id):
 
 
 
-@swagger_auto_schema(method = "get", response_body=favorite_BookmarkSerializer)
+@swagger_auto_schema(method = "get", response_body=favorite_BookmarkSerializer,
+                     tags=['즐겨찾기'], operation_summary='즐겨찾기 리스트 조회')
 @api_view(['GET'])
 def favorite_bookmark_list(request,user_id):
     try:
@@ -297,7 +271,8 @@ def favorite_bookmark_list(request,user_id):
         return Response({'message': 'No such favorite bookmark'}, status=status.HTTP_404_NOT_FOUND)
 
 
-@swagger_auto_schema(method = "patch", response_body="toggle bookmark")
+@swagger_auto_schema(method = "patch", response_body="toggle bookmark",
+                     tags=['즐겨찾기'],operation_summary='즐겨찾기 등록, 삭제(toggle)')
 @api_view(['PATCH'])
 def toggle_favorite_bookmark(request, bookmark_id):
     try:
@@ -320,3 +295,10 @@ def toggle_favorite_bookmark(request, bookmark_id):
 # @api_view(['GET'])
 # def alarm_list(request, user_id):
 #   deleted_bookmarks = Bookmark.objects.exclude(deleted_at__isnull=False)
+
+
+
+
+
+
+
