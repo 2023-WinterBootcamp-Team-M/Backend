@@ -246,7 +246,7 @@ def delete_folder(request, folder_id):
 
 
 @swagger_auto_schema(method = "get", response_body=favorite_BookmarkSerializer,
-                     tags=['즐겨찾기'], operation_summary='즐겨찾기 리스트 조회')
+                     tags=['즐겨찾기 관련'], operation_summary='즐겨찾기 리스트 조회')
 @api_view(['GET'])
 def favorite_bookmark_list(request,user_id):
     try:
@@ -272,7 +272,7 @@ def favorite_bookmark_list(request,user_id):
 
 
 @swagger_auto_schema(method = "patch", response_body="toggle bookmark",
-                     tags=['즐겨찾기'],operation_summary='즐겨찾기 등록, 삭제(toggle)')
+                     tags=['즐겨찾기 관련'],operation_summary='즐겨찾기 등록, 삭제(toggle)')
 @api_view(['PATCH'])
 def toggle_favorite_bookmark(request, bookmark_id):
     try:
