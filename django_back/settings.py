@@ -15,7 +15,6 @@ import os
 import environ
 import pymysql
 
-
 pymysql.install_as_MySQLdb()
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -23,7 +22,6 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 env = environ.Env()
 env.read_env()
-
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/4.2/howto/deployment/checklist/
@@ -36,7 +34,6 @@ DEBUG = True
 
 ALLOWED_HOSTS = []
 
-
 # Application definition
 
 INSTALLED_APPS = [
@@ -48,6 +45,8 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'rest_framework',
     'drf_yasg',
+    'bookmark',
+    'clipboard',
 ]
 
 MIDDLEWARE = [
@@ -80,7 +79,6 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'django_back.wsgi.application'
 
-
 # Database
 # https://docs.djangoproject.com/en/4.2/ref/settings/#databases
 
@@ -94,7 +92,6 @@ DATABASES = {
         'PORT': '3306',
     }
 }
-
 
 # Password validation
 # https://docs.djangoproject.com/en/4.2/ref/settings/#auth-password-validators
@@ -114,13 +111,12 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
-
 # Internationalization
 # https://docs.djangoproject.com/en/4.2/topics/i18n/
 
-LANGUAGE_CODE = 'en-us'
+LANGUAGE_CODE = 'ko-kr'
 
-TIME_ZONE = 'UTC'
+TIME_ZONE = 'Asia/Seoul'
 
 USE_I18N = True
 
