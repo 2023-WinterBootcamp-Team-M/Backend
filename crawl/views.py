@@ -11,21 +11,33 @@ import environ
 env = environ.Env()
 env.read_env()
 
-@csrf_exempt  # CSRF 토큰을 무시하도록 설정
+@csrf_exempt
 @require_http_methods(["POST"])
 def summary(request):
     try:
         openai.api_key = env('OPENAI_API_KEY')
         data = json.loads(request.body)
+
+        # Extracting URL and summary length from the request
         url = data.get('url')
+        summary_length = data.get('summary_length', 6)  # Default to 6-line summary
+
         content = crawl_url(url)
 
+        # Adjust the request to OpenAI based on summary_length
+        summary_request = "Please summarize the entire text content in "
+        if summary_length == 3:
+            summary_request += "three lines."
+        else:
+            summary_request += "six lines."
+        summary_request += " Please answer in Korean."
+
         response = openai.chat.completions.create(
-            model="gpt-4",  # 적합한 모델 선택
+            model="gpt-4-1106-preview",
             messages=[
                 {
                     "role": "system",
-                    "content": "Please summarize the entire text content in three lines. Please answer in Korean."
+                    "content": summary_request
                 },
                 {
                     "role": "user",

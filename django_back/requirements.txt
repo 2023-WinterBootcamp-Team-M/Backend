@@ -16,5 +16,6 @@ sqlparse==0.4.4
 typing_extensions==4.9.0
 uritemplate==4.1.1
 openai==1.6.1
+django-cors-headers==4.3.1
 beautifulsoup4==4.12.2
 requests==2.31.0
