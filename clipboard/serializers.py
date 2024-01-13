@@ -2,9 +2,16 @@ from rest_framework import serializers
 from .models import Clipboard, Image
 
 
+
 # GET_Request
 class GetClipboardRequestSerializer(serializers.Serializer):
     clipboard_id = serializers.IntegerField()
+
+    
+# POST_Request
+class PostClipboardRequestSerializer(serializers.Serializer):
+    user_id = serializers.IntegerField()
+    url = serializers.URLField(max_length=2048)
 
 
 # Response
