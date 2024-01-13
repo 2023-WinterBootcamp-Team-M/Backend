@@ -45,6 +45,48 @@ def create_folder(request):
         status=status.HTTP_400_BAD_REQUEST)
 
 
+@swagger_auto_schema(method='PATCH', request_body=update_delete_FolderSerializer,
+                     tags=['폴더 관련'], operation_summary='폴더 이름 수정')
+@swagger_auto_schema(method='DELETE', response_body='Success',
+                     tags=['폴더 관련'], operation_summary='폴더와 종속된 북마크 삭제')
+@api_view(['PATCH', 'DELETE'])
+def update_delete_folder(request, folder_id):
+    if request.method == 'PATCH':
+        try:
+            folder = BookmarkFolder.objects.get(id=folder_id)
+            new_name = request.data.get('name', folder.name)
+
+            folder.name = new_name
+            folder.updated_at = timezone.now()
+            folder.save()
+
+            return Response({'id': folder.id,
+                             'name': folder.name
+                             }, status=status.HTTP_200_OK)
+
+        except BookmarkFolder.DoesNotExist:
+            return Response({'error': 'Folder not found'}, status=status.HTTP_404_NOT_FOUND)
+
+
+    elif request.method == 'DELETE':
+        try:
+            folder = BookmarkFolder.objects.get(id=folder_id)
+            if folder.deleted_at is None:
+                # 폴더 삭제 시 해당 폴더에 속한 모든 북마크도 함께 삭제
+                Bookmark.objects.filter(folder_id=folder_id).update(deleted_at=timezone.now())
+
+                folder.deleted_at = timezone.now()
+                folder.save()
+
+                return Response({'message': 'Folder and associated bookmarks deleted successfully'},
+                                status=status.HTTP_200_OK)
+            else:
+                return Response({'error': 'Folder already deleted'}, status=status.HTTP_400_BAD_REQUEST)
+
+        except BookmarkFolder.DoesNotExist:
+            return Response({'error': 'Folder not found'}, status=status.HTTP_404_NOT_FOUND)
+
+
 # 폴더 조회 API
 # 북마크 폴더 리스트 조회(사용자가 북마크 패널 사용 시 처음 보게 되는 화면)
 # chrome.bookmark API가 DRF에 어떤 식으로 값을 던지는 지 알아야 함.
@@ -111,30 +153,69 @@ def create_bookmark(request):
 # 북마크 삭제 API
 # 일단 우리가 아는 삭제가 아님 -> 기술적 삭제임 즉 deleted_at이 NULL이 아님.
 # 삭제했던 것을 다시 부활시키면 Null로 해줘
+
+@swagger_auto_schema(method = "patch", request_body=update_delete_BookmarkSerializer,
+                     tags=['북마크 관련'], operation_summary='북마크 수정(이름, url)')
 @swagger_auto_schema(method='delete', response_body=BookmarkSerializer,
                      tags=['북마크 관련'],operation_summary="북마크 삭제")
-@api_view(['DELETE'])
-def delete_bookmark(request, folder_id, bookmark_id):
-    try:
-        # 폴더와 북마크 조회
-        bookmark = Bookmark.objects.get(pk=bookmark_id, folder_id=folder_id)
+@api_view(['PATCH','DELETE'])
+def update_delete_bookmark(request, folder_id, bookmark_id):
+    if request.method == 'PATCH':
+        try:
+            # 기존 북마크 가져오기
+            bookmark = Bookmark.objects.get(id=bookmark_id)
 
-        # 기술적 삭제
-        if bookmark.deleted_at is None:
-            # 삭제되지 않은 경우에만 처리
-            bookmark.deleted_at = timezone.now()
-            bookmark.save()
+            # Serializer를 사용하여 데이터 유효성 검사 및 업데이트
+            serializer = BookmarkSerializer(bookmark, data=request.data, partial=True)
 
-            serializers = BookmarkSerializer(bookmark)
+            if serializer.is_valid():
+                new_url = serializer.validated_data.get('url', bookmark.url)
+                new_name = serializer.validated_data.get('name', bookmark.name)
 
-            return Response(serializers.data, status=status.HTTP_200_OK)
-        else:
-            return Response({'error: 이미 삭제된 북마크입니다'}, status=status.HTTP_400_BAD_REQUEST)
+                # 기존과 동일한 'url' 또는 'name'을 가진 다른 북마크가 있는지 확인
+                if Bookmark.objects.filter(folder_id=folder_id, url=new_url,
+                                           deleted_at__isnull=True).exclude(id=bookmark.id).exists():
+                    return Response(
+                        {'error': 'This URL is already associated with another bookmark in the same folder.'},
+                        status=status.HTTP_400_BAD_REQUEST)
 
-    except BookmarkFolder.DoesNotExist:
-        return Response({'error': 'Folder not found.'}, status=status.HTTP_404_NOT_FOUND)
-    except Bookmark.DoesNotExist:
-        return Response({'error': 'Bookmark not found.'}, status=status.HTTP_404_NOT_FOUND)
+                if Bookmark.objects.filter(folder_id=folder_id, name=new_name,
+                                           deleted_at__isnull=True).exclude(id=bookmark.id).exists():
+                    return Response(
+                        {'error': 'This name is already associated with another bookmark in the same folder.'},
+                        status=status.HTTP_400_BAD_REQUEST)
+
+                # 유효성 검사를 통과하고 중복이 없으면 저장
+                serializer.save()
+                return Response(serializer.data, status=status.HTTP_200_OK)
+
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+        except Bookmark.DoesNotExist:
+            return Response({'error': 'Bookmark not found'}, status=status.HTTP_404_NOT_FOUND)
+
+
+    elif request.method == 'DELETE':
+        try:
+            # 폴더와 북마크 조회
+            bookmark = Bookmark.objects.get(pk=bookmark_id, folder_id=folder_id)
+
+            # 기술적 삭제
+            if bookmark.deleted_at is None:
+                # 삭제되지 않은 경우에만 처리
+                bookmark.deleted_at = timezone.now()
+                bookmark.save()
+
+                serializers = BookmarkSerializer(bookmark)
+
+                return Response(serializers.data, status=status.HTTP_200_OK)
+            else:
+                return Response({'error: 이미 삭제된 북마크입니다'}, status=status.HTTP_400_BAD_REQUEST)
+
+        except BookmarkFolder.DoesNotExist:
+            return Response({'error': 'Folder not found.'}, status=status.HTTP_404_NOT_FOUND)
+        except Bookmark.DoesNotExist:
+            return Response({'error': 'Bookmark not found.'}, status=status.HTTP_404_NOT_FOUND)
 
 
 # 북마크 폴더 이동 함수
@@ -165,82 +246,6 @@ def move_bookmark(request, folder_id, bookmark_id):
 
 
 # 북마크 이름, url을 수정할 수 있는 함수
-@swagger_auto_schema(method = "patch", request_body=update_delete_BookmarkSerializer,
-                     tags=['북마크 관련'], operation_summary='북마크 수정(이름, url)')
-@api_view(['PATCH'])
-def update_bookmark(request, folder_id, bookmark_id):
-    try:
-        # 기존 북마크 가져오기
-        bookmark = Bookmark.objects.get(id=bookmark_id)
-
-        # Serializer를 사용하여 데이터 유효성 검사 및 업데이트
-        serializer = BookmarkSerializer(bookmark, data=request.data, partial=True)
-
-        if serializer.is_valid():
-            new_url = serializer.validated_data.get('url', bookmark.url)
-            new_name = serializer.validated_data.get('name', bookmark.name)
-
-            # 기존과 동일한 'url' 또는 'name'을 가진 다른 북마크가 있는지 확인
-            if Bookmark.objects.filter(folder_id=folder_id, url=new_url,
-                                       deleted_at__isnull=True).exclude(id=bookmark.id).exists():
-                return Response({'error': 'This URL is already associated with another bookmark in the same folder.'},
-                                status=status.HTTP_400_BAD_REQUEST)
-
-            if Bookmark.objects.filter(folder_id=folder_id, name=new_name,
-                                       deleted_at__isnull=True).exclude(id=bookmark.id).exists():
-                return Response({'error': 'This name is already associated with another bookmark in the same folder.'},
-                                status=status.HTTP_400_BAD_REQUEST)
-
-            # 유효성 검사를 통과하고 중복이 없으면 저장
-            serializer.save()
-            return Response(serializer.data, status=status.HTTP_200_OK)
-
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-    except Bookmark.DoesNotExist:
-        return Response({'error': 'Bookmark not found'}, status=status.HTTP_404_NOT_FOUND)
-
-@swagger_auto_schema(method='PATCH', request_body=update_delete_FolderSerializer,
-                     tags=['폴더 관련'], operation_summary='폴더 이름 수정')
-@api_view(['PATCH'])
-def update_folder(request, folder_id):
-    try:
-        folder = BookmarkFolder.objects.get(id=folder_id)
-        new_name = request.data.get('name', folder.name)
-
-        folder.name = new_name
-        folder.updated_at = timezone.now()
-        folder.save()
-
-        return Response({'id' : folder.id,
-                         'name': folder.name
-                         }, status=status.HTTP_200_OK)
-
-    except BookmarkFolder.DoesNotExist:
-        return Response({'error': 'Folder not found'}, status=status.HTTP_404_NOT_FOUND)
-
-@swagger_auto_schema(method='DELETE', response_body='Success',
-                     tags=['폴더 관련'],operation_summary='폴더와 종속된 북마크 삭제')
-@api_view(['DELETE'])
-def delete_folder(request, folder_id):
-    try:
-        folder = BookmarkFolder.objects.get(id=folder_id)
-        if folder.deleted_at is None:
-            # 폴더 삭제 시 해당 폴더에 속한 모든 북마크도 함께 삭제
-            Bookmark.objects.filter(folder_id=folder_id).update(deleted_at=timezone.now())
-
-            folder.deleted_at = timezone.now()
-            folder.save()
-
-            return Response({'message': 'Folder and associated bookmarks deleted successfully'},
-                                status=status.HTTP_200_OK)
-        else:
-            return Response({'error': 'Folder already deleted'}, status=status.HTTP_400_BAD_REQUEST)
-
-    except BookmarkFolder.DoesNotExist:
-        return Response({'error': 'Folder not found'}, status=status.HTTP_404_NOT_FOUND)
-
-
 
 
 
