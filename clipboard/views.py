@@ -28,7 +28,6 @@ class PostClipboardView(APIView):
 
         if serializer.is_valid():
             user_id = serializer.validated_data['user_id']
-            clipboard_id = serializer.validated_data['clipboard_id']
             req_url = serializer.validated_data['url']
 
             # 이미지 크롤링 + 저장
@@ -38,10 +37,11 @@ class PostClipboardView(APIView):
                 soup = BeautifulSoup(req.content, 'html.parser')
                 img_tags = soup.find_all('img', {'src': True})
 
-                # Clipboard 모델에 request 된 clipboard_id 없으면 새로 create
+                # Clipboard 모델에 request 된 user_id 없으면 새로 create
                 clipboard, created = Clipboard.objects.get_or_create(
-                    id=clipboard_id,
                     user_id=user_id)
+
+                clipboard_id = clipboard.id
 
                 # 파싱된 이미지 저장
                 for img_tag in img_tags:
@@ -51,7 +51,7 @@ class PostClipboardView(APIView):
                 # Soft-delete : 50개 이상이면 가장 오래된 데이터 삭제
                 max_items = 50
                 current_items = Image.objects.filter(
-                    clipboard_id=clipboard_id, deleted_at__isnull=True).count()
+                    clipboard=clipboard, deleted_at__isnull=True).count()
 
                 if current_items > max_items:
                     oldest_items = Image.objects.filter(
@@ -66,7 +66,7 @@ class PostClipboardView(APIView):
 
                 # deleted_at이 null인 경우만 조회
                 images = clipboard.images.filter(deleted_at__isnull=True)
-                response_serializer = ClipboardResponseSerializer({'id': clipboard_id, 'images_list': images})
+                response_serializer = ClipboardResponseSerializer({'id': clipboard_id, 'images': images})
 
                 return Response(response_serializer.data, status=status.HTTP_201_CREATED)
 
