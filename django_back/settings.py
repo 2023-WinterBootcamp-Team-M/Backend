@@ -48,7 +48,6 @@ INSTALLED_APPS = [
     'drf_yasg',
     'accountinfo',
     'bookmark',
-    'crawl',
 
     'clipboard',
 

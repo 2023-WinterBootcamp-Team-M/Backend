@@ -18,7 +18,7 @@ class FolderSerializer(serializers.ModelSerializer):
 class BookmarkSerializer(serializers.ModelSerializer):
     class Meta:
         model = Bookmark
-        fields = ['id', 'name', 'url','icon', 'folder_id', 'created_at', 'updated_at']
+        fields = '__all__'
 
 
 # class get_BookmarkSerializer(serializers.ModelSerializer):

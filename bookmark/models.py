@@ -33,6 +33,9 @@ class Bookmark(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
     deleted_at = models.DateTimeField(null=True, blank=True)
     favorite = models.BooleanField(default=False)
+    short_summary = models.CharField(max_length=500, null=True)
+    long_summary = models.CharField(max_length=1000, null=True)
+
 
     def get_queryset(self):
         return super().get_queryset().filter(deleted_at__isnull=True)
