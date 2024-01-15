@@ -9,7 +9,8 @@ class UserDeleteSerializer(serializers.ModelSerializer):
 class UserProfileSerializer(serializers.ModelSerializer):
     class Meta:
         model = accountinfo
-        fields = ['email', 'id', 'user_name']
+        fields = '__all__'
+        #fields = ['email', 'id', 'user_name']
 class UserSigninSerializer(serializers.ModelSerializer):
     class Meta:
         model = accountinfo
