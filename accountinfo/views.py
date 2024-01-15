@@ -13,9 +13,6 @@ from django.contrib.auth import authenticate, login
 from django.shortcuts import get_object_or_404
 from django.utils import timezone  # timezone 모듈 임포트 추가
 
-from options import serializer
-
-
 # Create your views here.
 @swagger_auto_schema(method='delete', response_body='delete')
 @api_view(['DELETE'])
@@ -64,7 +61,11 @@ def profile_edit(request):
 
     # 저장
     info.save()
-    return Response(status=status.HTTP_200_OK)
+    return Response({
+            "email" : info.email,
+            "password" : info.password,
+            "user_name" : info.user_name},
+            status=status.HTTP_200_OK)
 
 
     # elif request.method == 'GET':
