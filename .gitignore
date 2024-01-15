@@ -6,3 +6,9 @@ db.sqlite3
 *.pot
 *.pyc
 __pycache__/
+
+
+# Only for Development only
+**/migrations/**
+!**/migrations
+!**/migrations/__init__.py
