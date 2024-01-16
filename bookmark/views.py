@@ -11,6 +11,10 @@ from bookmark.serializer import *
 from drf_yasg.utils import swagger_auto_schema
 from rest_framework.decorators import api_view
 from django.db.models import Prefetch
+
+from bookmark.utils import call_chatgpt_api, create_bookmark
+
+
 @swagger_auto_schema(method='post', request_body=UserSerializer,
                      operation_summary="임시적인 회원 생성", tags=['회원관리'],)
 # Create your views here.
@@ -23,26 +27,51 @@ def create_User(request):
 
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-# 폴더 생성 API
-# 수정 필요
-@swagger_auto_schema(method = "post", request_body = FolderSerializer,
-                     tags=['폴더 관련'],operation_summary="폴더 생성")
+
+@swagger_auto_schema(method='post', request_body=BookmarkCreateSerializer)
 @api_view(['POST'])
-def create_folder(request):
-    data = request.data
-    serializer = FolderSerializer(data=data)
+def create_classify_bookmark(request, user_id):
+    bookmark_data = request.data
+    bookmark_name = bookmark_data.get("name")
+    bookmark_url = bookmark_data.get("url")
 
-    # 폴더 이름 중복 처리
-    if BookmarkFolder.objects.filter(name= data['name'], deleted_at__isnull=True).exists():
-        return Response('The folder already exists', status=status.HTTP_400_BAD_REQUEST)
 
-    if serializer.is_valid():
-        serializer.save()
-        return Response(serializer.data,
-                        status=status.HTTP_201_CREATED)
+    # url, name 같은 지 예외처리
 
-    return Response(serializer.errors,
-        status=status.HTTP_400_BAD_REQUEST)
+    # 북마크 URL 분석을 통해 카테고리 결정
+    category = call_chatgpt_api(bookmark_url,user_id)
+
+    # 카테고리명을 키로 하여 북마크 정보를 JSON 형식으로 구성
+    # response_data = {
+    #     category: [
+    #         {
+    #             "name": bookmark_name,
+    #             "url": bookmark_url
+    #         }
+    #     ]
+    # }
+
+    user_instance = User.objects.get(id=user_id)
+    # 같은 폴더 있으면
+    if BookmarkFolder.objects.filter(name=category,user_id=user_instance).exists():
+        folder = BookmarkFolder.objects.get(name=category)
+        bookmark = create_bookmark(bookmark_name,bookmark_url,folder.id)
+    else:
+        folder = BookmarkFolder(name=category, user_id=user_instance)
+        folder.save()
+        bookmark = create_bookmark(bookmark_name,bookmark_url, folder.id)
+
+    folder_serializer = FolderSerializer(folder)
+    bookmark_serializer = BookmarkSerializer(bookmark)
+
+    # 직렬화된 데이터를 응답으로 사용
+    response_data = {
+        'folder': folder_serializer.data,
+        'bookmark': bookmark_serializer.data,
+    }
+
+    return Response(response_data, status=status.HTTP_200_OK)
+
 
 
 @swagger_auto_schema(method='PATCH', request_body=update_delete_FolderSerializer,
@@ -123,33 +152,6 @@ def get_bookmarks_in_folder(request, folder_id):
         return Response({'error': 'Folder not found.'}, status=status.HTTP_404_NOT_FOUND)
 
 
-# 북마크 생성 API
-# 크롬북마크 API -> DRF -> Open ai API -> 북마크 분류 API
-# api 가 던져준 북마크 name에 넣어져야 함
-@swagger_auto_schema(method='post',request_body=BookmarkSerializer,
-                     tags=['북마크 관련'],operation_summary="북마크 생성")
-@api_view(['POST'])
-def create_bookmark(request):
-    data = request.data
-    # url하고 이름은 클라이언트가 지정하는 걸로 결정
-    url = data.get('url')
-    name = data.get('name')
-
-
-    if Bookmark.objects.filter(url=url, deleted_at__isnull=True).exists():
-        return Response({'error': 'Bookmark with the same URL already exists.'}, status=status.HTTP_400_BAD_REQUEST)
-    if Bookmark.objects.filter(name=name, deleted_at__isnull=True).exists():
-        return Response({'error': 'Bookmark with the same name already exists.'}, status=status.HTTP_400_BAD_REQUEST)
-
-    serializer = BookmarkSerializer(data=data)
-
-    if serializer.is_valid():
-        serializer.save()
-        return Response(serializer.data, status=status.HTTP_201_CREATED)
-
-    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-
 # 북마크 삭제 API
 # 일단 우리가 아는 삭제가 아님 -> 기술적 삭제임 즉 deleted_at이 NULL이 아님.
 # 삭제했던 것을 다시 부활시키면 Null로 해줘
@@ -162,6 +164,8 @@ def create_bookmark(request):
 def update_delete_bookmark(request, folder_id, bookmark_id):
     if request.method == 'PATCH':
         try:
+            folder = BookmarkFolder.objects.get(folder_id=folder_id)
+            user_id = folder.user_id
             # 기존 북마크 가져오기
             bookmark = Bookmark.objects.get(id=bookmark_id)
 
