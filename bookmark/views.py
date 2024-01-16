@@ -133,6 +133,21 @@ def get_bookmarks_in_folder(request, folder_id):
         return Response({'error': 'Folder not found.'}, status=status.HTTP_404_NOT_FOUND)
 
 
+
+@swagger_auto_schema(method="get", response_body = BookmarkSerializer)
+@api_view(['GET'])
+def get_bookmarks_summary(request, bookmark_id):
+    try:
+        bookmark = Bookmark.objects.get(bookmark_id=bookmark_id)
+        folders = BookmarkFolder.objects.get(id=bookmark.folder_id, deleted_at__isnull=True)
+        option = Option.objects.filter(user_id=folders.user.id, deleted_at__isnull=True)
+        if option.summary:
+            summary = bookmark.long_summary
+        else:
+            summary = bookmark.short_summary
+    except Bookmark.DoesNotExist:
+        return Response(status=status.HTTP_404_NOT_FOUND)
+
 # 북마크 생성 API
 # 크롬북마크 API -> DRF -> Open ai API -> 북마크 분류 API
 # api 가 던져준 북마크 name에 넣어져야 함

@@ -2,6 +2,9 @@ import uuid
 
 from django.db import models
 
+from accountinfo.models import accountinfo
+
+
 # Create your models here.
 
 class User(models.Model):
@@ -13,7 +16,7 @@ class User(models.Model):
 
 
 class BookmarkFolder(models.Model):
-    user_id = models.ForeignKey(User,on_delete=models.CASCADE, db_constraint=False)
+    user_id = models.ForeignKey(accountinfo,on_delete=models.CASCADE, db_constraint=False)
     name = models.CharField(max_length=20)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
