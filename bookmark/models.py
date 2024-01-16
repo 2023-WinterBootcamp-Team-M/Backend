@@ -1,4 +1,3 @@
-import uuid
 
 from django.db import models
 
@@ -29,7 +28,8 @@ class Bookmark(models.Model):
     name = models.CharField(max_length=20)
     #icon = models.ImageField(upload_to='bookmarks/')
     folder_id = models.ForeignKey(BookmarkFolder,on_delete=models.CASCADE)
-    icon = models.CharField(max_length=2048)
+    icon = models.CharField(max_length=2048,
+                            default="https://previews.123rf.com/images/salimcreative/salimcreative2005/salimcreative200500050/148346486-%EB%B6%81%EB%A7%88%ED%81%AC-%EC%95%84%EC%9D%B4%EC%BD%98.jpg")
     url = models.CharField(max_length=2048)
     is_connected = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)

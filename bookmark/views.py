@@ -145,13 +145,16 @@ def get_bookmarks_summary(request, bookmark_id):
             summary = bookmark.long_summary
         else:
             summary = bookmark.short_summary
+
+        return Response({'summary': summary}, status=status.HTTP_200_OK)
+
     except Bookmark.DoesNotExist:
         return Response(status=status.HTTP_404_NOT_FOUND)
 
 # 북마크 생성 API
 # 크롬북마크 API -> DRF -> Open ai API -> 북마크 분류 API
 # api 가 던져준 북마크 name에 넣어져야 함
-@swagger_auto_schema(method='post',request_body=BookmarkSerializer,
+@swagger_auto_schema(method='post',request_body=BookmarkCreateSerializer,
                      tags=['북마크 관련'],operation_summary="북마크 생성")
 @api_view(['POST'])
 def create_bookmark(request):
@@ -168,12 +171,18 @@ def create_bookmark(request):
     short_summary = summary_three(url)
     long_summary = summary_six(url)
 
-    # 직렬화할 데이터에 short_summary와 long_summary 추가
-    data['short_summary'] = short_summary
-    data['long_summary'] = long_summary
+
     serializer = BookmarkSerializer(data=data)
+    # 직렬화할 데이터에 short_summary와 long_summary 추가
+
 
     if serializer.is_valid():
+        serializer.validated_data['short_summary'] = short_summary
+        serializer.validated_data['long_summary'] = long_summary
+
+        if url.endswith('/'):
+            serializer.validated_data['icon'] = url + 'favicon.ico'
+
         serializer.save()
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
@@ -215,6 +224,7 @@ def update_delete_bookmark(request, folder_id, bookmark_id):
                         {'error': 'This name is already associated with another bookmark in the same folder.'},
                         status=status.HTTP_400_BAD_REQUEST)
 
+                serializer.data['updated_at'] = timezone.now()
                 # 유효성 검사를 통과하고 중복이 없으면 저장
                 serializer.save()
                 return Response(serializer.data, status=status.HTTP_200_OK)
