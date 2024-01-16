@@ -168,6 +168,10 @@ def create_bookmark(request):
     if Bookmark.objects.filter(name=name, deleted_at__isnull=True).exists():
         return Response({'error': 'Bookmark with the same name already exists.'}, status=status.HTTP_400_BAD_REQUEST)
 
+    if url.startswith('www'):
+        url = 'http://' + url
+        data['url'] = url
+
     short_summary = summary_three(url)
     long_summary = summary_six(url)
 
