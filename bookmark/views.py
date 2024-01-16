@@ -11,6 +11,10 @@ from bookmark.serializer import *
 from drf_yasg.utils import swagger_auto_schema
 from rest_framework.decorators import api_view
 from django.db.models import Prefetch
+
+from bookmark.utils import summary_three, summary_six
+
+
 @swagger_auto_schema(method='post', request_body=UserSerializer,
                      operation_summary="임시적인 회원 생성", tags=['회원관리'],)
 # Create your views here.
@@ -29,11 +33,12 @@ def create_User(request):
                      tags=['폴더 관련'],operation_summary="폴더 생성")
 @api_view(['POST'])
 def create_folder(request):
+    user_id = request.user.id
     data = request.data
     serializer = FolderSerializer(data=data)
 
     # 폴더 이름 중복 처리
-    if BookmarkFolder.objects.filter(name= data['name'], deleted_at__isnull=True).exists():
+    if BookmarkFolder.objects.filter(name= data['name'], user_id=user_id, deleted_at__isnull=True).exists():
         return Response('The folder already exists', status=status.HTTP_400_BAD_REQUEST)
 
     if serializer.is_valid():
@@ -53,9 +58,14 @@ def create_folder(request):
 def update_delete_folder(request, folder_id):
     if request.method == 'PATCH':
         try:
+            user_id = request.data['user_id']
+            data = request.data
             folder = BookmarkFolder.objects.get(id=folder_id)
-            new_name = request.data.get('name', folder.name)
 
+            if BookmarkFolder.objects.filter(name=data['name'], user_id=user_id, deleted_at__isnull=True).exists():
+                return Response('The folder already exists', status=status.HTTP_400_BAD_REQUEST)
+
+            new_name = request.data.get('name', folder.name)
             folder.name = new_name
             folder.updated_at = timezone.now()
             folder.save()
@@ -135,12 +145,17 @@ def create_bookmark(request):
     url = data.get('url')
     name = data.get('name')
 
-
     if Bookmark.objects.filter(url=url, deleted_at__isnull=True).exists():
         return Response({'error': 'Bookmark with the same URL already exists.'}, status=status.HTTP_400_BAD_REQUEST)
     if Bookmark.objects.filter(name=name, deleted_at__isnull=True).exists():
         return Response({'error': 'Bookmark with the same name already exists.'}, status=status.HTTP_400_BAD_REQUEST)
 
+    short_summary = summary_three(url)
+    long_summary = summary_six(url)
+
+    # 직렬화할 데이터에 short_summary와 long_summary 추가
+    data['short_summary'] = short_summary
+    data['long_summary'] = long_summary
     serializer = BookmarkSerializer(data=data)
 
     if serializer.is_valid():
