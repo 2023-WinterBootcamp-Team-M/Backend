@@ -18,11 +18,7 @@ env.read_env()
 def call_chatgpt_api(bookmark_url,user_id):
     openai.api_key = env('OPENAI_API_KEY')
 
-    categorize_request = ("Please categorize the contents of these links into about 10 categories and organize the links into each folder accordingly.\
-                          The language of the folder name is Korean.\
-                          If one bookmark is added, please include this data in the categories we identified earlier.\
-                          Please provide the output in JSON format.\
-                          Please answer in Korean.\ ")
+    categorize_request = ("")
 
     # folders = folder_data_list(user_id)
     # content = bookmark_url + ' '.join(folders) if folders else bookmark_url
@@ -118,6 +114,15 @@ def folder_data_list(user_id):
     except User.DoesNotExist:
         return None
 
+
+
+# Based on the URL and name, create folder names that fit the category and output this in JSON format. \
+#     Only include the input values we provided, without any examples.\
+#     The language of the folder name is Korean.\
+#     If one bookmark is added, please include this data in the categories we identified earlier.\
+#     Please provide the output in JSON format.\
+#     lease answer in Korean.\
+
 # Based on the URL and name, create folder names that fit the category and output this in JSON format.\
 #                           Only include the input values we provided, without any examples.\
 #                           Rather than focusing on a single element like 'Developer Community' or 'Cloud Service Management', group such elements under broader categories like 'Development'. \
@@ -126,10 +131,8 @@ def folder_data_list(user_id):
 #                           If one bookmark is added, please include this data in the categories we identified earlier.\
 #                           Please provide the output in JSON format.\
 #                           Please answer in Korean.\
-
-# Based on the URL and name, create folder names that fit the category and output this in JSON format. \
-#     Only include the input values we provided, without any examples.\
-#     The language of the folder name is Korean.\
-#     If one bookmark is added, please include this data in the categories we identified earlier.\
-#     Please provide the output in JSON format.\
-#     lease answer in Korean.\
+# Please categorize the contents of these links into about 10 categories and organize the links into each folder accordingly.\
+#                           The language of the folder name is Korean.\
+#                           If one bookmark is added, please include this data in the categories we identified earlier.\
+#                           Please provide the output in JSON format.\
+#                           Please answer in Korean.\
