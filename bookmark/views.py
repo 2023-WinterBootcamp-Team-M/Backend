@@ -29,7 +29,7 @@ def create_User(request):
 
 # 폴더 생성 API
 # 수정 필요
-@swagger_auto_schema(method = "post", request_body = FolderSerializer,
+@swagger_auto_schema(method = "post", request_body = FolderCreateSerializer,
                      tags=['폴더 관련'],operation_summary="폴더 생성")
 @api_view(['POST'])
 def create_folder(request):
@@ -136,7 +136,7 @@ def get_bookmarks_in_folder(request, folder_id):
 # 북마크 생성 API
 # 크롬북마크 API -> DRF -> Open ai API -> 북마크 분류 API
 # api 가 던져준 북마크 name에 넣어져야 함
-@swagger_auto_schema(method='post',request_body=BookmarkSerializer,
+@swagger_auto_schema(method='post',request_body=BookmarkCreateSerializer,
                      tags=['북마크 관련'],operation_summary="북마크 생성")
 @api_view(['POST'])
 def create_bookmark(request):
