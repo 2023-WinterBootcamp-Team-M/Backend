@@ -156,15 +156,21 @@ def create_bookmark(request):
     # url하고 이름은 클라이언트가 지정하는 걸로 결정
     url = data.get('url')
     name = data.get('name')
+    folder_id = data.get('folder_id')
 
-    if Bookmark.objects.filter(url=url, deleted_at__isnull=True).exists():
+    try:
+        folder = BookmarkFolder.objects.get(id=folder_id)
+    except BookmarkFolder.DoesNotExist:
+        return Response(status=status.HTTP_404_NOT_FOUND)
+
+
+    if Bookmark.objects.filter(folder_id__user_id=folder.user_id, url=url,
+                                              deleted_at__isnull=True).exists():
         return Response({'error': 'Bookmark with the same URL already exists.'}, status=status.HTTP_400_BAD_REQUEST)
-    if Bookmark.objects.filter(name=name, deleted_at__isnull=True).exists():
+    if Bookmark.objects.filter(folder_id__user_id=folder.user_id, name=name,
+                                              deleted_at__isnull=True).exists():
         return Response({'error': 'Bookmark with the same name already exists.'}, status=status.HTTP_400_BAD_REQUEST)
 
-    if not url.startswith('http://') and not url.startswith('https://'):
-        url = 'https://' + url
-        data['url'] = url
 
     short_summary = summary_three(url)
     long_summary = summary_six(url)
