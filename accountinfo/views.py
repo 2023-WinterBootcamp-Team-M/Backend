@@ -17,53 +17,54 @@ from django.core.serializers import serialize
 from django.http import JsonResponse
 
 # Create your views here.
-@swagger_auto_schema(method='delete', response_body='delete')
-@api_view(['DELETE'])
-def delete_user(request, user_id):
-    # 세션에서 사용자 아이디 가져오기
-    #email = request.session.get('email')
-    account = accountinfo.objects.get(id= user_id)
-    options = accountoptions.objects.get(accountid = user_id)
-
-    if account.deleted_at is None:
-        # 사용자 모델에서 사용자 객체 가져오기
-        #user = get_object_or_404(accountinfo, account)
-
-        # 사용자의 날짜 필드 업데이트
-        account.deleted_at = timezone.now()
-        options.deleted_at = timezone.now()
-        account.save()
-        options.save()
-
-        return Response({"user_deleted_at": account.deleted_at,
-                         "options_deleted_at": options.deleted_at,
-                         }, status=status.HTTP_200_OK)
-    else:
-        return Response({'messege': '이미 삭제되었습니다.'},status=status.HTTP_400_BAD_REQUEST)
 
 # @swagger_auto_schema(method='GET', response_body='get ok')
 # @api_view(['GET'])
 # def profile_get(user_id):
 #     profile = accountinfo.objects.get(email=email)
 #     return Response(profile.data, status=status.HTTP_200_OK)
-@swagger_auto_schema(method='get')
-@api_view(['GET'])
-def profile(request, user_id):
-    get_profile = accountinfo.objects.filter(id=user_id)
-    options_json = serialize('json', get_profile)
-    serialized_data = [
-        {
-            'id': profile['id'],
-            'user_name': profile['user_name'],
-            'email': profile['email'],
-        }
-        for profile in get_profile.values()
-    ]
-    return JsonResponse({'profile': serialized_data}, safe=False)
+@swagger_auto_schema(method='delete', response_body='delete',
+                     tags=['유저 관련'], operation_summary='회원 삭제')
+@swagger_auto_schema(method='get',tags=['유저 관련'], operation_summary='유저 정보 조회')
+@api_view(['DELETE','GET'])
+def get_delete_user(request,user_id):
+    if request.method == 'DELETE':
+        account = accountinfo.objects.get(id=user_id)
+        options = accountoptions.objects.get(accountid=user_id)
+
+        if account.deleted_at is None:
+            # 사용자 모델에서 사용자 객체 가져오기
+            # user = get_object_or_404(accountinfo, account)
+
+            # 사용자의 날짜 필드 업데이트
+            account.deleted_at = timezone.now()
+            options.deleted_at = timezone.now()
+            account.save()
+            options.save()
+
+            return Response({"user_deleted_at": account.deleted_at,
+                             "options_deleted_at": options.deleted_at,
+                             }, status=status.HTTP_200_OK)
+        else:
+            return Response({'messege': '이미 삭제되었습니다.'}, status=status.HTTP_400_BAD_REQUEST)
+
+    if request.method == 'GET':
+        get_profile = accountinfo.objects.filter(id=user_id)
+        options_json = serialize('json', get_profile)
+        serialized_data = [
+            {
+                'id': profile['id'],
+                'user_name': profile['user_name'],
+                'email': profile['email'],
+            }
+            for profile in get_profile.values()
+        ]
+        return JsonResponse({'profile': serialized_data}, safe=False)
 
 
 
-@swagger_auto_schema(method='put', request_body=UserSignupSerializer)
+@swagger_auto_schema(method='put', request_body=UserSignupSerializer,
+                     tags=['유저 관련'], operation_summary='프로필 수정')
 @api_view(['PUT'])
 def profile_edit(request):
     info = accountinfo.objects.get(email=request.data['email'])
@@ -104,9 +105,9 @@ def profile_edit(request):
     # else:
     #     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 # return Response(info, status.HTTP_202_ACCEPTED)
-
-
-def logout(request, email):
+@swagger_auto_schema(method='POST',tags=['유저 관련'], operation_summary='로그아웃')
+@api_view(['POST'])
+def signout(request,email):
     if email in request.session:
         del request.session[email]
         return Response({
@@ -118,7 +119,8 @@ def logout(request, email):
         },status.HTTP_400_BAD_REQUEST)
 
 
-@swagger_auto_schema(method='post', request_body=UserSigninSerializer)
+@swagger_auto_schema(method='post', request_body=UserSigninSerializer,
+                     tags=['유저 관련'], operation_summary='로그인')
 @api_view(['POST'])
 def signin(request):
     # signininfo = UserSigninSerializer(data=request.data)
@@ -153,7 +155,8 @@ def signin(request):
 
 @swagger_auto_schema(method='post',
                      request_body=UserSignupSerializer,
-                     response_body=OptionCreateSerializer,)
+                     response_body=OptionCreateSerializer,
+                     tags=['유저 관련'], operation_summary='회원 생성')
 @api_view(['POST'])
 def signup(request):
     signup_info = UserSignupSerializer(data=request.data)
@@ -185,7 +188,7 @@ def signup(request):
 #                      response_body=OptionIdSerializer)
 
 #@swagger_auto_schema(method='get', responses={200: OptionEditSerializer(many=True)})
-@swagger_auto_schema(method='get')
+@swagger_auto_schema(method='get',tags=['유저 옵션 관련'], operation_summary='옵션 조회')
 @api_view(['GET'])
 def User_options(request,user_id):
     get_options = accountoptions.objects.filter(accountid=user_id)
@@ -206,7 +209,8 @@ def User_options(request,user_id):
     #     return Response(serializer.data, status=status.HTTP_200_OK)
     # else:
     #     return Response(serializer.errors, status = status.HTTP_400_BAD_REQUEST)
-@swagger_auto_schema(method='put', request_body=OptionCreateSerializer)
+@swagger_auto_schema(method='put', request_body=OptionCreateSerializer,
+                     tags=['유저 옵션 관련'], operation_summary='옵션 수정')
 @api_view(['PUT'])
 def User_options_edit(request):
     # edit_options = accountoptions.objects.get(account_id=user_id)

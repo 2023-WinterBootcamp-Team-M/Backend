@@ -122,7 +122,8 @@ def get_bookmarks_in_folder(request, folder_id):
     except BookmarkFolder.DoesNotExist:
         return Response({'error': 'Folder not found.'}, status=status.HTTP_404_NOT_FOUND)
 
-@swagger_auto_schema(method="get", response_body = BookmarkSerializer)
+@swagger_auto_schema(method="get", response_body = BookmarkSerializer,
+                     tags=['북마크 관련'],operation_summary="북마크의 요약 정보 조회")
 @api_view(['GET'])
 def get_bookmarks_summary(request, bookmark_id):
     try:
