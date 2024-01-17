@@ -29,7 +29,7 @@ def create_User(request):
 
 # 폴더 생성 API
 # 수정 필요
-@swagger_auto_schema(method = "post", request_body = FolderSerializer,
+@swagger_auto_schema(method = "post", request_body = FolderCreateSerializer,
                      tags=['폴더 관련'],operation_summary="폴더 생성")
 @api_view(['POST'])
 def create_folder(request):
@@ -134,22 +134,6 @@ def get_bookmarks_in_folder(request, folder_id):
 
 
 
-@swagger_auto_schema(method="get", response_body = BookmarkSerializer)
-@api_view(['GET'])
-def get_bookmarks_summary(request, bookmark_id):
-    try:
-        bookmark = Bookmark.objects.get(bookmark_id=bookmark_id)
-        folders = BookmarkFolder.objects.get(id=bookmark.folder_id, deleted_at__isnull=True)
-        option = Option.objects.filter(user_id=folders.user.id, deleted_at__isnull=True)
-        if option.summary:
-            summary = bookmark.long_summary
-        else:
-            summary = bookmark.short_summary
-
-        return Response({'summary': summary}, status=status.HTTP_200_OK)
-
-    except Bookmark.DoesNotExist:
-        return Response(status=status.HTTP_404_NOT_FOUND)
 
 # 북마크 생성 API
 # 크롬북마크 API -> DRF -> Open ai API -> 북마크 분류 API
@@ -168,8 +152,8 @@ def create_bookmark(request):
     if Bookmark.objects.filter(name=name, deleted_at__isnull=True).exists():
         return Response({'error': 'Bookmark with the same name already exists.'}, status=status.HTTP_400_BAD_REQUEST)
 
-    if url.startswith('www'):
-        url = 'http://' + url
+    if not url.startswith('http://') and not url.startswith('https://'):
+        url = 'https://' + url
         data['url'] = url
 
     short_summary = summary_three(url)
@@ -184,8 +168,8 @@ def create_bookmark(request):
         serializer.validated_data['short_summary'] = short_summary
         serializer.validated_data['long_summary'] = long_summary
 
-        if url.endswith('/'):
-            serializer.validated_data['icon'] = url + 'favicon.ico'
+        # if url.endswith('.com/'):
+        #     serializer.validated_data['icon'] = url + 'favicon.ico'
 
         serializer.save()
         return Response(serializer.data, status=status.HTTP_201_CREATED)
