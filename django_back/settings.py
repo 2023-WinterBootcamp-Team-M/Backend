@@ -50,7 +50,6 @@ INSTALLED_APPS = [
     'bookmark',
 
     'clipboard',
-
 ]
 
 MIDDLEWARE = [
