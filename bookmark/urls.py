@@ -3,7 +3,6 @@ from django.urls import path
 from .views import *
 
 urlpatterns = [
-    path('users', create_User, name='create_user'),
 
     path('folders', create_folder, name='create_folder'),
     path('folders/<int:folder_id>', update_delete_folder, name='update_delete_folder'),
