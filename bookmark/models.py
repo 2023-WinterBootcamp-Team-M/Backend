@@ -6,13 +6,6 @@ from accountinfo.models import accountinfo
 
 # Create your models here.
 
-class User(models.Model):
-    name = models.CharField(max_length=20)
-    email = models.EmailField(max_length=254)
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
-    deleted_at = models.DateTimeField(null=True)
-
 
 class BookmarkFolder(models.Model):
     user_id = models.ForeignKey(accountinfo,on_delete=models.CASCADE, db_constraint=False)

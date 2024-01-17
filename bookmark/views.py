@@ -15,18 +15,6 @@ from django.db.models import Prefetch
 from bookmark.utils import summary_three, summary_six
 
 
-@swagger_auto_schema(method='post', request_body=UserSerializer,
-                     operation_summary="임시적인 회원 생성", tags=['회원관리'],)
-# Create your views here.
-@api_view(['POST'])
-def create_User(request):
-    serializer = UserSerializer(data=request.data)
-    if serializer.is_valid():
-        serializer.save()
-        return Response(serializer.data, status=status.HTTP_201_CREATED)
-
-    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
 # 폴더 생성 API
 # 수정 필요
 @swagger_auto_schema(method = "post", request_body = FolderCreateSerializer,
