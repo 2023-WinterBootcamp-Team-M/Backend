@@ -16,6 +16,10 @@ class UserSigninSerializer(serializers.ModelSerializer):
     class Meta:
         model = accountinfo
         fields = ['email', 'password']
+class UserSignoutSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = accountinfo
+        fields = ['email']
 
 class UserSignupSerializer(serializers.ModelSerializer):
     class Meta:
