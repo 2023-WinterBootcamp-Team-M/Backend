@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Bookmark, BookmarkFolder, User
+from .models import Bookmark, BookmarkFolder
 
 
 class FolderSerializer(serializers.ModelSerializer):
