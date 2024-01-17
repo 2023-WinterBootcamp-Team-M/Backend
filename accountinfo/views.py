@@ -5,7 +5,7 @@ from django.shortcuts import render
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from accountinfo.serializers import UserSignupSerializer, UserSigninSerializer, UserProfileSerializer, \
-    UserDeleteSerializer, OptionCreateSerializer, OptionEditSerializer, OptionIdSerializer
+    UserDeleteSerializer, OptionCreateSerializer, OptionEditSerializer, OptionIdSerializer, UserSignoutSerializer
 from rest_framework import status
 from drf_yasg.utils import swagger_auto_schema
 from accountinfo.models import accountinfo, accountoptions
@@ -15,6 +15,8 @@ from django.shortcuts import get_object_or_404
 from django.utils import timezone  # timezone 모듈 임포트 추가
 from django.core.serializers import serialize
 from django.http import JsonResponse
+from django.contrib.auth import logout
+from django.shortcuts import redirect
 
 # Create your views here.
 
@@ -105,18 +107,23 @@ def profile_edit(request):
     # else:
     #     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 # return Response(info, status.HTTP_202_ACCEPTED)
-@swagger_auto_schema(method='POST',tags=['유저 관련'], operation_summary='로그아웃')
+@swagger_auto_schema(method='POST',tags=['유저 관련'],
+                     request_body=UserSignoutSerializer,operation_summary='로그아웃')
 @api_view(['POST'])
-def signout(request,email):
-    if email in request.session:
-        del request.session[email]
-        return Response({
-            "message": "로그아웃 완료"
-        }, status=200)
-    else:
-        return Response({
-            "message": "요청하신 정보가 올바르지 않습니다."
-        },status.HTTP_400_BAD_REQUEST)
+def signout(request):
+    logout(request)
+    # 로그아웃 후 리다이렉트할 페이지 지정 (예: 홈페이지)
+    return redirect('home')
+    # email = request.data.get('email', None)
+    # if email in request.session:
+    #     del request.session[email]
+    #     return Response({
+    #         "message": "로그아웃 완료"
+    #     }, status=200)
+    # else:
+    #     return Response({
+    #         "message": "요청하신 정보가 올바르지 않습니다."
+    #     },status.HTTP_400_BAD_REQUEST)
 
 
 @swagger_auto_schema(method='post', request_body=UserSigninSerializer,

@@ -7,6 +7,6 @@ urlpatterns = [
     path('profile/<int:user_id>', get_delete_user),
     path('sign-out',signout),
     path('profile', profile_edit),
-    path('sign-in', signin),
+    path('sign-in', signin,name='home'),
     path('sign-up', signup),
 ]
