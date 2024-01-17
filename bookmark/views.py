@@ -5,6 +5,8 @@ from rest_framework import status
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from rest_framework.views import APIView
+
+from accountinfo.models import accountoptions
 from bookmark.models import *
 from rest_framework import serializers
 from bookmark.serializer import *
@@ -119,6 +121,25 @@ def get_bookmarks_in_folder(request, folder_id):
 
     except BookmarkFolder.DoesNotExist:
         return Response({'error': 'Folder not found.'}, status=status.HTTP_404_NOT_FOUND)
+
+@swagger_auto_schema(method="get", response_body = BookmarkSerializer)
+@api_view(['GET'])
+def get_bookmarks_summary(request, bookmark_id):
+    try:
+        bookmark = Bookmark.objects.get(id=bookmark_id)
+        folder = BookmarkFolder.objects.get(id=bookmark.folder_id.id, deleted_at__isnull=True)
+
+        option = accountoptions.objects.get(accountid=folder.user_id.id, deleted_at__isnull=True)
+
+        if option.summarizeoption:
+            summary = bookmark.long_summary
+        else:
+            summary = bookmark.short_summary
+
+        return Response({'summary': summary}, status=status.HTTP_200_OK)
+
+    except Bookmark.DoesNotExist:
+        return Response(status=status.HTTP_404_NOT_FOUND)
 
 
 
