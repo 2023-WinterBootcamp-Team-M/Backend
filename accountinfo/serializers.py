@@ -35,12 +35,7 @@ class OptionCreateSerializer(serializers.ModelSerializer):
 class OptionEditSerializer(serializers.ModelSerializer):
     class Meta:
         model = accountoptions
-        fields = ['summarizeoption', 'startupoption', 'themeoption', 'bookmarkalertoption', 'updated_at']
-
-class OptionEditSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = accountoptions
-        fields = ['summarizeoption', 'startupoption', 'themeoption', 'bookmarkalertoption']
+        fields = ['accountid','summarizeoption', 'startupoption', 'themeoption', 'bookmarkalertoption', 'updated_at']
 
 class OptionIdSerializer(serializers.ModelSerializer):
     class Meta:

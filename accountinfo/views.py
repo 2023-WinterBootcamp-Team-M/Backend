@@ -167,7 +167,6 @@ def signin(request):
 @api_view(['POST'])
 def signup(request):
     signup_info = UserSignupSerializer(data=request.data)
-    print("@@@@@@", signup_info)
     if signup_info.is_valid():
         request_email = signup_info.validated_data.get('email')
         signup_info.save()
@@ -217,13 +216,13 @@ def User_options(request,user_id):
     # else:
     #     return Response(serializer.errors, status = status.HTTP_400_BAD_REQUEST)
 @swagger_auto_schema(method='put', request_body=OptionCreateSerializer,
+                     response_body = OptionEditSerializer,
                      tags=['유저 옵션 관련'], operation_summary='옵션 수정')
 @api_view(['PUT'])
 def User_options_edit(request):
     # edit_options = accountoptions.objects.get(account_id=user_id)
     # serializer = OptionCreateSerializer(edit_options)
     options_instance = accountoptions.objects.get(accountid=request.data['accountid'])
-    print('@@@option_edit_instance',options_instance)
         # 사용자로부터 넘어온 값들
     new_summarize_option = request.data.get('summarizeoption', options_instance.summarizeoption)
     new_startup_option = request.data.get('startupoption', options_instance.startupoption)
@@ -234,11 +233,11 @@ def User_options_edit(request):
     options_instance.startupoption = new_startup_option
     options_instance.themeoption = new_theme_option
     options_instance.bookmarkalertoption = new_bookmark_alert_option
+    options_instance.updated_at = timezone.now()
 
-    # 시리얼라이저를 사용해 유효성 검사 후 저장
-    serializer = OptionEditSerializer(options_instance, data=request.data)
+# 시리얼라이저를 사용해 유효성 검사 후 저장
+    serializer = OptionEditSerializer(instance = options_instance, data=request.data)
     if serializer.is_valid():
-        options_instance.update_at = timezone.now()
         serializer.save()
         return Response(serializer.data, status=status.HTTP_200_OK)
     else:
