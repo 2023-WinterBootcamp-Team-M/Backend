@@ -48,10 +48,10 @@ services:
 
   celery_worker:
     container_name: celery_worker
-    command: sh -c "celery -A celery worker --loglevel=info"
-    build:
-      context: ./django_back
-      dockerfile: Dockerfile
+    volumes:
+      - ./:/app
+    command: sh -c "celery -A django_back worker --loglevel=info"
+    build: ./
     environment:
       - CELERY_BROKER_URL=amqp://guest:guest@rabbitmq:5672//
     depends_on:
@@ -62,10 +62,10 @@ services:
 
   celery_beat:
     container_name: celery_beat
-    command: sh -c "celery -A celery beat --loglevel=info"
-    build:
-      context: ./django_back
-      dockerfile: Dockerfile
+    volumes:
+      - ./:/app
+    command: sh -c "celery -A django_back beat --loglevel=info"
+    build: ./
     environment:
       - CELERY_BROKER_URL=amqp://guest:guest@rabbitmq:5672//
     depends_on:
@@ -79,7 +79,6 @@ services:
     container_name: flower
     environment:
       - CELERY_BROKER_URL=amqp://guest:guest@rabbitmq:5672/
-      - CELERY_RESULT_BACKEND=redis://redis:6379/0
       - TZ=Asia/Seoul
     ports:
       - '5555:5555'

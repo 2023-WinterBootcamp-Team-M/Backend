@@ -7,6 +7,7 @@ db.sqlite3
 *.pyc
 __pycache__/
 
+celerybeat-schedule
 
 # Only for Development only
 **/migrations/**
