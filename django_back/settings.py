@@ -147,7 +147,7 @@ CELERY_ACCEPT_CONTENT = ['application/json']
 CELERY_TASK_SERIALIZER = 'json'
 CELERY_RESULT_SERIALIZER = 'json'
 CELERY_TIMEZONE = 'Asia/Seoul'
-
+CELERY_BROKER_CONNECTION_RETRY_ON_STARTUP = True
 # Celery task를 종료 가능하게 해주는 세팅 (굉장히 중요)
 CELERY_TASK_REVOKE = True
 

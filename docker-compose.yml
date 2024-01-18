@@ -51,7 +51,7 @@ services:
     volumes:
       - ./:/app
     command: sh -c "celery -A django_back worker --loglevel=info"
-    build: ./
+    build: ./django_back
     environment:
       - CELERY_BROKER_URL=amqp://guest:guest@rabbitmq:5672//
     depends_on:
@@ -65,7 +65,7 @@ services:
     volumes:
       - ./:/app
     command: sh -c "celery -A django_back beat --loglevel=info"
-    build: ./
+    build: ./django_back
     environment:
       - CELERY_BROKER_URL=amqp://guest:guest@rabbitmq:5672//
     depends_on:
