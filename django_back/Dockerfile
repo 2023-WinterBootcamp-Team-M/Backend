@@ -6,8 +6,8 @@ WORKDIR /app
 
 # 의존성 설치
 COPY requirements.txt .
-RUN pip install -r requirements.txt
 RUN apt-get update
+RUN pip install -r requirements.txt
 
 # 소스 코드 복사
 COPY . ./django_back
