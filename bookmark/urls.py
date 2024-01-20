@@ -4,7 +4,7 @@ from .views import *
 
 urlpatterns = [
 
-    # path('folders', create_folder, name='create_folder'),
+    path('folders', create_folder, name='create_folder'),
     path('folders/<int:folder_id>', update_delete_folder, name='update_delete_folder'),
     path('folders/list/<int:user_id>', get_folders, name='get_folders'),
 

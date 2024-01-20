@@ -1,14 +1,13 @@
-from django.shortcuts import render
-import json
 import re
+import json
+import requests
+from bs4 import BeautifulSoup
 import openai
-from django.http import JsonResponse
-from rest_framework.decorators import api_view
-from rest_framework.response import Response
 import environ
 
-from bookmark.models import BookmarkFolder, Bookmark, User
-from bookmark.serializer import BookmarkSerializer, FolderSerializer
+from accountinfo.models import accountinfo
+from bookmark.models import BookmarkFolder, Bookmark
+
 
 # Create your views here.
 
@@ -18,7 +17,14 @@ env.read_env()
 def call_chatgpt_api(bookmark_url,user_id):
     openai.api_key = env('OPENAI_API_KEY')
 
-    categorize_request = ("")
+    categorize_request = ("Based on the URL and name, create folder names that fit the category and output this in JSON format.\
+                          Only include the input values we provided, without any examples.\
+                          Rather than focusing on a single element like 'Developer Community' or 'Cloud Service Management', group such elements under broader categories like 'Development'. \
+                          Create folders from this wider perspective.\
+                          The language of the folder name is Korean.\
+                          If one bookmark is added, please include this data in the categories we identified earlier.\
+                          Please provide the output in JSON format.\
+                          Please answer in Korean.\ ")
 
     # folders = folder_data_list(user_id)
     # content = bookmark_url + ' '.join(folders) if folders else bookmark_url
@@ -40,8 +46,6 @@ def call_chatgpt_api(bookmark_url,user_id):
     # 만약 폴더가 하나도 없다면, 기본 URL만 남깁니다.
     content = content if folder_data_list else bookmark_url
 
-    # 만약 폴더가 하나도 없다면, 기본 URL만 남깁니다.
-    content = content if folder_data_list else bookmark_url
 
     response = openai.chat.completions.create(
         model="gpt-4-1106-preview",
@@ -77,14 +81,16 @@ def call_chatgpt_api(bookmark_url,user_id):
 
 
 
-def create_bookmark(bookmark_name,bookmark_url, folder_id):
+def new_bookmark(bookmark_name,bookmark_url, folder_id):
     folder_instance = BookmarkFolder.objects.get(id=folder_id)
-    bookmark = Bookmark(name=bookmark_name,
-                                       url=bookmark_url, folder_id=folder_instance)
+    short_summary = summary_three(bookmark_url)
+    long_summary = summary_six(bookmark_url)
+
+    bookmark = Bookmark(name=bookmark_name,url=bookmark_url,folder_id=folder_instance,
+                        short_summary=short_summary, long_summary=long_summary)
     bookmark.clean()
     bookmark.save()
     return bookmark
-
 # def folder_name_list(user_id):
 #     try:
 #         user_id = User.objects.get(id=user_id)
@@ -98,7 +104,7 @@ def create_bookmark(bookmark_name,bookmark_url, folder_id):
 #         return None
 def folder_data_list(user_id):
     try:
-        user = User.objects.get(id=user_id)
+        user = accountinfo.objects.get(id=user_id)
         folders = BookmarkFolder.objects.filter(user_id=user, deleted_at__isnull=True)
         folder_data_list = []
 
@@ -111,7 +117,7 @@ def folder_data_list(user_id):
 
         return folder_data_list
 
-    except User.DoesNotExist:
+    except accountinfo.DoesNotExist:
         return None
 
 
@@ -123,29 +129,13 @@ def folder_data_list(user_id):
 #     Please provide the output in JSON format.\
 #     lease answer in Korean.\
 
-# Based on the URL and name, create folder names that fit the category and output this in JSON format.\
-#                           Only include the input values we provided, without any examples.\
-#                           Rather than focusing on a single element like 'Developer Community' or 'Cloud Service Management', group such elements under broader categories like 'Development'. \
-#                           Create folders from this wider perspective.\
-#                           The language of the folder name is Korean.\
-#                           If one bookmark is added, please include this data in the categories we identified earlier.\
-#                           Please provide the output in JSON format.\
-#                           Please answer in Korean.\
+
 # Please categorize the contents of these links into about 10 categories and organize the links into each folder accordingly.\
 #                           The language of the folder name is Korean.\
 #                           If one bookmark is added, please include this data in the categories we identified earlier.\
 #                           Please provide the output in JSON format.\
 #                           Please answer in Korean.\
-import json
-from django.http import JsonResponse
-from django.views.decorators.csrf import csrf_exempt
-from django.views.decorators.http import require_http_methods
-import requests
-from bs4 import BeautifulSoup
 
-import openai
-import environ
-from rest_framework.response import Response
 env = environ.Env()
 env.read_env()
 

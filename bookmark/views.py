@@ -1,87 +1,40 @@
 from django.utils import timezone
-from django.http import JsonResponse
-from django.shortcuts import render
-from rest_framework import status
-from rest_framework.decorators import api_view
-from rest_framework.response import Response
-from rest_framework.views import APIView
 
-from accountinfo.models import accountoptions
-from bookmark.models import *
-from rest_framework import serializers
+from rest_framework import status
+
+from rest_framework.response import Response
+
+
+from accountinfo.models import accountoptions, accountinfo
+
 from bookmark.serializer import *
 from drf_yasg.utils import swagger_auto_schema
 from rest_framework.decorators import api_view
-from django.db.models import Prefetch
-@swagger_auto_schema(method='post', request_body=UserSerializer,
-                     operation_summary="임시적인 회원 생성", tags=['회원관리'],)
-# Create your views here.
-@api_view(['POST'])
-def create_User(request):
-    serializer = UserSerializer(data=request.data)
-    if serializer.is_valid():
-        serializer.save()
-        return Response(serializer.data, status=status.HTTP_201_CREATED)
-
-from bookmark.utils import summary_three, summary_six
+from bookmark.utils import summary_three, summary_six, call_chatgpt_api, new_bookmark
 
 
 # 폴더 생성 API
 # 수정 필요
+
 @swagger_auto_schema(method = "post", request_body = FolderCreateSerializer,
                      tags=['폴더 관련'],operation_summary="폴더 생성")
-
-@swagger_auto_schema(method='post', request_body=BookmarkCreateSerializer)
 @api_view(['POST'])
 def create_folder(request):
     user_id = request.user.id
     data = request.data
     serializer = FolderSerializer(data=data)
-def create_classify_bookmark(request, user_id):
-    bookmark_data = request.data
-    bookmark_name = bookmark_data.get("name")
-    bookmark_url = bookmark_data.get("url")
 
     # 폴더 이름 중복 처리
     if BookmarkFolder.objects.filter(name= data['name'], user_id=user_id, deleted_at__isnull=True).exists():
         return Response('The folder already exists', status=status.HTTP_400_BAD_REQUEST)
 
-    # url, name 같은 지 예외처리
+    if serializer.is_valid():
+        serializer.save()
+        return Response(serializer.data,
+                        status=status.HTTP_201_CREATED)
 
-    # 북마크 URL 분석을 통해 카테고리 결정
-    category = call_chatgpt_api(bookmark_url,user_id)
-
-    # 카테고리명을 키로 하여 북마크 정보를 JSON 형식으로 구성
-    # response_data = {
-    #     category: [
-    #         {
-    #             "name": bookmark_name,
-    #             "url": bookmark_url
-    #         }
-    #     ]
-    # }
-
-    user_instance = User.objects.get(id=user_id)
-    # 같은 폴더 있으면
-    if BookmarkFolder.objects.filter(name=category,user_id=user_instance).exists():
-        folder = BookmarkFolder.objects.get(name=category)
-        bookmark = create_bookmark(bookmark_name,bookmark_url,folder.id)
-    else:
-        folder = BookmarkFolder(name=category, user_id=user_instance)
-        folder.save()
-        bookmark = create_bookmark(bookmark_name,bookmark_url, folder.id)
-
-    folder_serializer = FolderSerializer(folder)
-    bookmark_serializer = BookmarkSerializer(bookmark)
-
-    # 직렬화된 데이터를 응답으로 사용
-    response_data = {
-        'folder': folder_serializer.data,
-        'bookmark': bookmark_serializer.data,
-    }
-
-    return Response(response_data, status=status.HTTP_200_OK)
-
+    return Response(serializer.errors,
+        status=status.HTTP_400_BAD_REQUEST)
 
 
 @swagger_auto_schema(method='PATCH', request_body=update_delete_FolderSerializer,
@@ -186,6 +139,47 @@ def get_bookmarks_summary(request, bookmark_id):
     except Bookmark.DoesNotExist:
         return Response(status=status.HTTP_404_NOT_FOUND)
 
+
+@swagger_auto_schema(method="post",request_body=BookmarkclassifySerializer,
+                     tags=['북마크 관련'], operation_summary='북마크 생성 및 폴더 분류')
+@api_view(['POST'])
+def create_classify_bookmark(request, user_id):
+    data = request.data
+    bookmark_name = data.get("name")
+    bookmark_url = data.get("url")
+    # 북마크 URL 분석을 통해 카테고리 결정
+    category = call_chatgpt_api(bookmark_url,user_id)
+
+    # 카테고리명을 키로 하여 북마크 정보를 JSON 형식으로 구성
+    # response_data = {
+    #     category: [
+    #         {
+    #             "name": bookmark_name,
+    #             "url": bookmark_url
+    #         }
+    #     ]
+    # }
+
+    #user_instance = accountinfo.objects.get(id=user_id)
+    # 같은 폴더 있으면
+    if BookmarkFolder.objects.filter(name=category,user_id=user_id).exists():
+        folder = BookmarkFolder.objects.get(name=category)
+        bookmark = new_bookmark(bookmark_name,bookmark_url,folder.id)
+    else:
+        folder = BookmarkFolder(name=category, user_id=user_id)
+        folder.save()
+        bookmark = new_bookmark(bookmark_name,bookmark_url, folder.id)
+
+    folder_serializer = FolderSerializer(folder)
+    bookmark_serializer = BookmarkSerializer(bookmark)
+
+    #직렬화된 데이터를 응답으로 사용
+    response_data = {
+        'folder': folder_serializer.data,
+        'bookmark': bookmark_serializer.data,
+    }
+
+    return Response(response_data, status=status.HTTP_200_OK)
 
 
 
