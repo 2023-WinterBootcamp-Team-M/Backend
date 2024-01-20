@@ -3,11 +3,11 @@ from .views import DeleteAllImagesView, PostClipboardView, GetClipboardView, Del
 
 
 urlpatterns = [
-    path('clipboard/', PostClipboardView.as_view(), name='clipboard'),
-    path('clipboard/<int:clipboard_id>/', GetClipboardView.as_view(), name='clipboard_list'),
-    path('clipboard/<int:clipboard_id>/images/',
+    path('clipboard', PostClipboardView.as_view(), name='clipboard'),
+    path('clipboard/<int:clipboard_id>', GetClipboardView.as_view(), name='clipboard_list'),
+    path('clipboard/<int:clipboard_id>/images',
          DeleteAllImagesView.as_view(), name='delete_all_images'),
-    path('clipboard/<int:clipboard_id>/<int:image_id>/',
+    path('clipboard/<int:clipboard_id>/<int:image_id>',
          DeleteImagesView.as_view(), name='delete_image')
 
 ]
