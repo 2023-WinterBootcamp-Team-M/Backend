@@ -145,6 +145,29 @@ def get_bookmarks_summary(request, bookmark_id):
 
 
 
+    #user_instance = accountinfo.objects.get(id=user_id)
+    # 같은 폴더 있으면
+    if BookmarkFolder.objects.filter(name=category,user_id=user_id).exists():
+        folder = BookmarkFolder.objects.get(name=category)
+        bookmark = new_bookmark(bookmark_name,bookmark_url,folder.id)
+    else:
+        folder = BookmarkFolder(name=category, user_id=user_id)
+        folder.save()
+        bookmark = new_bookmark(bookmark_name,bookmark_url, folder.id)
+
+    folder_serializer = FolderSerializer(folder)
+    bookmark_serializer = BookmarkSerializer(bookmark)
+
+    #직렬화된 데이터를 응답으로 사용
+    response_data = {
+        'folder': folder_serializer.data,
+        'bookmark': bookmark_serializer.data,
+    }
+
+    return Response(response_data, status=status.HTTP_200_OK)
+
+
+
 # 북마크 생성 API
 # 크롬북마크 API -> DRF -> Open ai API -> 북마크 분류 API
 # api 가 던져준 북마크 name에 넣어져야 함
