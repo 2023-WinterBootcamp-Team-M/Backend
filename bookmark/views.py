@@ -45,8 +45,8 @@ def create_folder(request):
 def update_delete_folder(request, folder_id):
     if request.method == 'PATCH':
         try:
-            user_id = request.data['user_id']
             data = request.data
+            user_id = data.get('user_id')
             folder = BookmarkFolder.objects.get(id=folder_id)
 
             if BookmarkFolder.objects.filter(name=data['name'], user_id=user_id, deleted_at__isnull=True).exists():
@@ -243,13 +243,14 @@ def create_bookmark(request):
 def update_delete_bookmark(request, folder_id, bookmark_id):
     if request.method == 'PATCH':
         try:
-            folder = BookmarkFolder.objects.get(folder_id=folder_id)
+            data = request.data
+            folder = BookmarkFolder.objects.get(id=folder_id)
             user_id = folder.user_id
             # 기존 북마크 가져오기
             bookmark = Bookmark.objects.get(id=bookmark_id)
 
             # Serializer를 사용하여 데이터 유효성 검사 및 업데이트
-            serializer = BookmarkSerializer(bookmark, data=request.data, partial=True)
+            serializer = BookmarkSerializer(bookmark, data=data, partial=True)
 
             if serializer.is_valid():
                 new_url = serializer.validated_data.get('url', bookmark.url)
@@ -268,7 +269,11 @@ def update_delete_bookmark(request, folder_id, bookmark_id):
                         {'error': 'This name is already associated with another bookmark in the same folder.'},
                         status=status.HTTP_400_BAD_REQUEST)
 
-                serializer.data['updated_at'] = timezone.now()
+                if 'url' in request.data:
+                    serializer.validated_data['short_summary'] = summary_three(new_url)
+                    serializer.validated_data['long_summary'] = summary_six(new_url)
+
+                serializer.validated_data['updated_at'] = timezone.now()
                 # 유효성 검사를 통과하고 중복이 없으면 저장
                 serializer.save()
                 return Response(serializer.data, status=status.HTTP_200_OK)
