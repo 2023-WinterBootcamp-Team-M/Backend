@@ -148,6 +148,7 @@ CORS_ORIGIN_ALLOW_ALL = True
 ALLOWED_HOSTS = ['127.0.0.1',
                  '127.0.0.1:8000',
                  'localhost:8000',
+                 'host.docker.internal',
                  'host.docker.internal:8000',
                  'node-exporter:9100',
                  'prometheus:9090',
