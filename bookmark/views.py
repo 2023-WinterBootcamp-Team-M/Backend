@@ -1,24 +1,25 @@
 from django.utils import timezone
-from django.http import JsonResponse
-from django.shortcuts import render
-from rest_framework import status
-from rest_framework.decorators import api_view
-from rest_framework.response import Response
-from rest_framework.views import APIView
 
-from accountinfo.models import accountoptions
-from bookmark.models import *
-from rest_framework import serializers
+from rest_framework import status
+
+from rest_framework.response import Response
+
+
+from accountinfo.models import accountoptions, accountinfo
+
 from bookmark.serializer import *
 from drf_yasg.utils import swagger_auto_schema
 from rest_framework.decorators import api_view
-from django.db.models import Prefetch
+from bookmark.utils import summary_three, summary_six, call_chatgpt_api, new_bookmark
 
-from bookmark.utils import summary_three, summary_six
+import environ
 
 
+env = environ.Env()
+env.read_env()
 # 폴더 생성 API
 # 수정 필요
+
 @swagger_auto_schema(method = "post", request_body = FolderCreateSerializer,
                      tags=['폴더 관련'],operation_summary="폴더 생성")
 @api_view(['POST'])
@@ -48,8 +49,8 @@ def create_folder(request):
 def update_delete_folder(request, folder_id):
     if request.method == 'PATCH':
         try:
-            user_id = request.data['user_id']
             data = request.data
+            user_id = data.get('user_id')
             folder = BookmarkFolder.objects.get(id=folder_id)
 
             if BookmarkFolder.objects.filter(name=data['name'], user_id=user_id, deleted_at__isnull=True).exists():
@@ -143,6 +144,47 @@ def get_bookmarks_summary(request, bookmark_id):
         return Response(status=status.HTTP_404_NOT_FOUND)
 
 
+@swagger_auto_schema(method="post",request_body=BookmarkclassifySerializer,
+                     tags=['북마크 관련'], operation_summary='북마크 생성 및 폴더 분류')
+@api_view(['POST'])
+def create_classify_bookmark(request, user_id):
+    data = request.data
+    bookmark_name = data.get("name")
+    bookmark_url = data.get("url")
+    # 북마크 URL 분석을 통해 카테고리 결정
+    category = call_chatgpt_api(bookmark_url,user_id)
+
+    # 카테고리명을 키로 하여 북마크 정보를 JSON 형식으로 구성
+    # response_data = {
+    #     category: [
+    #         {
+    #             "name": bookmark_name,
+    #             "url": bookmark_url
+    #         }
+    #     ]
+    # }
+
+    user_instance = accountinfo.objects.get(id=user_id)
+    # 같은 폴더 있으면
+    if BookmarkFolder.objects.filter(name=category,user_id=user_instance).exists():
+        folder = BookmarkFolder.objects.get(name=category)
+        bookmark = new_bookmark(bookmark_name,bookmark_url,folder.id)
+    else:
+        folder = BookmarkFolder(name=category, user_id=user_instance)
+        folder.save()
+        bookmark = new_bookmark(bookmark_name,bookmark_url, folder.id)
+
+    folder_serializer = FolderSerializer(folder)
+    bookmark_serializer = BookmarkSerializer(bookmark)
+
+    #직렬화된 데이터를 응답으로 사용
+    response_data = {
+        'folder': folder_serializer.data,
+        'bookmark': bookmark_serializer.data,
+    }
+
+    return Response(response_data, status=status.HTTP_200_OK)
+
 
 
 # 북마크 생성 API
@@ -205,11 +247,14 @@ def create_bookmark(request):
 def update_delete_bookmark(request, folder_id, bookmark_id):
     if request.method == 'PATCH':
         try:
+            data = request.data
+            folder = BookmarkFolder.objects.get(id=folder_id)
+            user_id = folder.user_id
             # 기존 북마크 가져오기
             bookmark = Bookmark.objects.get(id=bookmark_id)
 
             # Serializer를 사용하여 데이터 유효성 검사 및 업데이트
-            serializer = BookmarkSerializer(bookmark, data=request.data, partial=True)
+            serializer = BookmarkSerializer(bookmark, data=data, partial=True)
 
             if serializer.is_valid():
                 new_url = serializer.validated_data.get('url', bookmark.url)
@@ -228,7 +273,11 @@ def update_delete_bookmark(request, folder_id, bookmark_id):
                         {'error': 'This name is already associated with another bookmark in the same folder.'},
                         status=status.HTTP_400_BAD_REQUEST)
 
-                serializer.data['updated_at'] = timezone.now()
+                if 'url' in request.data:
+                    serializer.validated_data['short_summary'] = summary_three(new_url)
+                    serializer.validated_data['long_summary'] = summary_six(new_url)
+
+                serializer.validated_data['updated_at'] = timezone.now()
                 # 유효성 검사를 통과하고 중복이 없으면 저장
                 serializer.save()
                 return Response(serializer.data, status=status.HTTP_200_OK)
@@ -344,10 +393,4 @@ def toggle_favorite_bookmark(request, bookmark_id):
 # @api_view(['GET'])
 # def alarm_list(request, user_id):
 #   deleted_bookmarks = Bookmark.objects.exclude(deleted_at__isnull=False)
-
-
-
-
-
-
 
