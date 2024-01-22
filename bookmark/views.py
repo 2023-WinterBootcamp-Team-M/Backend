@@ -12,7 +12,11 @@ from drf_yasg.utils import swagger_auto_schema
 from rest_framework.decorators import api_view
 from bookmark.utils import summary_three, summary_six, call_chatgpt_api, new_bookmark
 
+import environ
 
+
+env = environ.Env()
+env.read_env()
 # 폴더 생성 API
 # 수정 필요
 
@@ -160,13 +164,13 @@ def create_classify_bookmark(request, user_id):
     #     ]
     # }
 
-    #user_instance = accountinfo.objects.get(id=user_id)
+    user_instance = accountinfo.objects.get(id=user_id)
     # 같은 폴더 있으면
-    if BookmarkFolder.objects.filter(name=category,user_id=user_id).exists():
+    if BookmarkFolder.objects.filter(name=category,user_id=user_instance).exists():
         folder = BookmarkFolder.objects.get(name=category)
         bookmark = new_bookmark(bookmark_name,bookmark_url,folder.id)
     else:
-        folder = BookmarkFolder(name=category, user_id=user_id)
+        folder = BookmarkFolder(name=category, user_id=user_instance)
         folder.save()
         bookmark = new_bookmark(bookmark_name,bookmark_url, folder.id)
 
@@ -389,10 +393,4 @@ def toggle_favorite_bookmark(request, bookmark_id):
 # @api_view(['GET'])
 # def alarm_list(request, user_id):
 #   deleted_bookmarks = Bookmark.objects.exclude(deleted_at__isnull=False)
-
-
-
-
-
-
 

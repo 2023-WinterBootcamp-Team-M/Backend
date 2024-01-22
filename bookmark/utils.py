@@ -19,12 +19,16 @@ def call_chatgpt_api(bookmark_url,user_id):
 
     categorize_request = ("Based on the URL and name, create folder names that fit the category and output this in JSON format.\
                           Only include the input values we provided, without any examples.\
-                          Rather than focusing on a single element like 'Developer Community' or 'Cloud Service Management', group such elements under broader categories like 'Development'. \
-                          Create folders from this wider perspective.\
+                          If it's difficult to categorize a folder into these classifications, label it as 'Others'.\
+                          Please ensure that all folder names are summarized in just one word.\
                           The language of the folder name is Korean.\
                           If one bookmark is added, please include this data in the categories we identified earlier.\
                           Please provide the output in JSON format.\
-                          Please answer in Korean.\ ")
+                          This is the important thing. Please follow the rules.\
+                          If the URL of the site includes words like naver, google, daum, categorize it as a portal.\
+                          If it contains words like edu, ac.kr, categorize it as education. If it includes github, stackoverflow, categorize it as development.\
+                          Please answer in Korean.")
+
 
     # folders = folder_data_list(user_id)
     # content = bookmark_url + ' '.join(folders) if folders else bookmark_url
@@ -120,7 +124,14 @@ def folder_data_list(user_id):
     except accountinfo.DoesNotExist:
         return None
 
-
+# Based on the URL and name, create folder names that fit the category and output this in JSON format.\
+#                           Only include the input values we provided, without any examples.\
+#                           Rather than focusing on a single element like 'Developer Community' or 'Cloud Service Management', group such elements under broader categories like 'Development'. \
+#                           Create folders from this wider perspective.\
+#                           The language of the folder name is Korean.\
+#                           If one bookmark is added, please include this data in the categories we identified earlier.\
+#                           Please provide the output in JSON format.\
+#                           Please answer in Korean.\
 
 # Based on the URL and name, create folder names that fit the category and output this in JSON format. \
 #     Only include the input values we provided, without any examples.\
