@@ -21,3 +21,5 @@ beautifulsoup4==4.12.2
 requests==2.31.0
 celery==5.3.6
 django-celery-beat==2.5.0
+django-prometheus==2.2.0
+

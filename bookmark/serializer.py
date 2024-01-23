@@ -38,6 +38,12 @@ class BookmarkCreateSerializer(serializers.ModelSerializer):
     class Meta:
         model = Bookmark
         fields = ['id', 'folder_id','name', 'url']
+
+class BookmarkclassifySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Bookmark
+        fields = ['id', 'name', 'url']
+
 class move_BookmarkSerializer(serializers.ModelSerializer):
     class Meta:
         model = Bookmark

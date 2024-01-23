@@ -1,6 +1,6 @@
 
 from django.db import models
-
+from django.core.exceptions import ValidationError
 from accountinfo.models import accountinfo
 
 
@@ -35,6 +35,25 @@ class Bookmark(models.Model):
 
     def get_queryset(self):
         return super().get_queryset().filter(deleted_at__isnull=True)
+
+    def clean(self):
+        # 부모의 clean 메서드 호출 (필수)
+        super().clean()
+
+        # 현재 북마크의 folder_id로부터 해당 폴더의 user_id 가져오기
+        current_folder_user_id = self.folder_id.user_id
+
+        # user_id가 같은 폴더들에서 중복된 url 또는 name을 확인
+        duplicate_bookmarks = Bookmark.objects.filter(
+            folder_id__user_id=current_folder_user_id,
+            url=self.url,
+            name=self.name,
+            deleted_at__isnull=True  # 삭제되지 않은 북마크만 확인
+        ).exclude(id=self.id)  # 현재 북마크는 제외
+
+        if duplicate_bookmarks.exists():
+            # 중복된 북마크가 존재하면 ValidationError 발생
+            raise ValidationError("Duplicate bookmark found in the same user's folders.")
 
 class Reminder(models.Model):
     bookmark_name = models.CharField(max_length=20)

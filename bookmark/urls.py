@@ -10,6 +10,7 @@ urlpatterns = [
 
     path('bookmarks', create_bookmark, name='create_bookmark'),
     path('bookmarks/summary/<int:bookmark_id>',get_bookmarks_summary, name='get_bookmarks_summary'),
+    path('bookmarks/list/<int:user_id>', create_classify_bookmark, name='create_classify_bookmark'),
     path('bookmarks/<int:folder_id>', get_bookmarks_in_folder, name='get_bookmarks_in_folder'),
     path('bookmarks/<int:folder_id>/<int:bookmark_id>', update_delete_bookmark, name='update_delete_bookmark'),
     path('bookmarks/folders/<int:folder_id>/<int:bookmark_id>', move_bookmark, name='move_bookmark'),

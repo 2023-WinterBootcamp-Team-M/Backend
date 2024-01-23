@@ -12,7 +12,7 @@ class DeleteImagesView(APIView):
     @swagger_auto_schema(
         operation_description="클립보드 개별 이미지 삭제 API",
         operation_summary="클립보드 개별 이미지 지우기",
-        tags=["Clipboard API"],
+        tags=["클립보드 관련"],
         operation_id="delete_images"
     )
     def delete(self, request, clipboard_id, image_id):
