@@ -5,17 +5,17 @@ from celery.schedules import crontab
 
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'django_back.settings')
 
-app = Celery('django_back', broker='amqp://guest:guest@rabbitmq:5672/')
+app = Celery('django_back',broker='amqp://guest:guest@rabbitmq:5672/')#backend='rpc://'
 app.config_from_object('django.conf:settings', namespace='CELERY')
 
 app.conf.beat_schedule = {
-    'send_alarm_for_unread_bookmarks': {
-        'task': 'bookmark.tasks.send_alarm_for_unread_bookmarks',
-        'schedule': crontab(hour=9, minute=0),
+    'want_result': {
+        'task': 'bookmark.tasks.want_result',
+        'schedule': crontab(),
     },
 }
 
-app.autodiscover_tasks()
+
 app.autodiscover_tasks()
 
 app.conf.task_ack_late = True

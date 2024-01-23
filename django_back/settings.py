@@ -45,6 +45,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'django_celery_beat',
+    #'django_celery_results',
     'rest_framework',
     'drf_yasg',
     'accountinfo',
@@ -156,3 +157,5 @@ CELERYD_REDIRECT_STDOUTS = False
 
 CELERY_FLOWER_USER = 'root'  # Flower 웹 인터페이스 사용자 이름
 CELERY_FLOWER_PASSWORD = 'root'  # Flower 웹 인터페이스 비밀번호
+
+CELERY_RESULT_BACKEND = 'rpc://'

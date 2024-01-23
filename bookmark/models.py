@@ -35,3 +35,10 @@ class Bookmark(models.Model):
 
     def get_queryset(self):
         return super().get_queryset().filter(deleted_at__isnull=True)
+
+class Reminder(models.Model):
+    bookmark_name = models.CharField(max_length=20)
+    bookmark_url = models.CharField(max_length=2048)
+    user_id = models.ForeignKey(accountinfo,on_delete=models.CASCADE, db_constraint=False)
+    is_checked = models.BooleanField(default=False)
+    accumulated_days = models.IntegerField()

@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Bookmark, BookmarkFolder
+from .models import Bookmark, BookmarkFolder, Reminder
 
 
 class FolderSerializer(serializers.ModelSerializer):
@@ -11,6 +11,11 @@ class BookmarkSerializer(serializers.ModelSerializer):
     class Meta:
         model = Bookmark
         fields = '__all__'
+class ReminderSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Reminder
+        fields = '__all__'
+
 
 
 # class get_BookmarkSerializer(serializers.ModelSerializer):

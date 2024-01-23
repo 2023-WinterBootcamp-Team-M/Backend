@@ -1,22 +1,19 @@
+import random
+
+from django.http import HttpResponse
+from django_back.celery import app as celery_app
+
 from django.utils import timezone
-from django.http import JsonResponse
-from django.shortcuts import render
 from rest_framework import status
-from rest_framework.decorators import api_view
 from rest_framework.response import Response
-from rest_framework.views import APIView
 
 from accountinfo.models import accountoptions
-from bookmark.models import *
-from rest_framework import serializers
 from bookmark.serializer import *
 from drf_yasg.utils import swagger_auto_schema
 from rest_framework.decorators import api_view
-from django.db.models import Prefetch
-
 from bookmark.utils import summary_three, summary_six
-
-
+from .models import Reminder
+from .tasks import *
 # 폴더 생성 API
 # 수정 필요
 @swagger_auto_schema(method = "post", request_body = FolderCreateSerializer,
@@ -144,27 +141,6 @@ def get_bookmarks_summary(request, bookmark_id):
 
 
 
-
-    #user_instance = accountinfo.objects.get(id=user_id)
-    # 같은 폴더 있으면
-    if BookmarkFolder.objects.filter(name=category,user_id=user_id).exists():
-        folder = BookmarkFolder.objects.get(name=category)
-        bookmark = new_bookmark(bookmark_name,bookmark_url,folder.id)
-    else:
-        folder = BookmarkFolder(name=category, user_id=user_id)
-        folder.save()
-        bookmark = new_bookmark(bookmark_name,bookmark_url, folder.id)
-
-    folder_serializer = FolderSerializer(folder)
-    bookmark_serializer = BookmarkSerializer(bookmark)
-
-    #직렬화된 데이터를 응답으로 사용
-    response_data = {
-        'folder': folder_serializer.data,
-        'bookmark': bookmark_serializer.data,
-    }
-
-    return Response(response_data, status=status.HTTP_200_OK)
 
 
 
@@ -362,14 +338,68 @@ def toggle_favorite_bookmark(request, bookmark_id):
         bookmark.save()
         return Response({'favorite': bookmark.favorite},status=status.HTTP_200_OK)
 
+@swagger_auto_schema(method='get', tags=['알림 관련'],operation_summary='알림 유무 조회')
+@api_view(['GET'])
+def has_reminders(request,user_id):
+    if Reminder.objects.filter(user_id=user_id, is_checked=False).exists():
+        return Response(status=status.HTTP_200_OK)
+    else:
+        return Response(status=status.HTTP_404_NOT_FOUND)
+
+@swagger_auto_schema(method='get',tags=['알림 관련'],operation_summary='알림 목록 조회')
+@api_view(['GET'])
+def reminders_list(request, user_id):
+    reminders = Reminder.objects.filter(user_id=user_id)
+    reminders_data = [ReminderSerializer(reminder).data for reminder in reminders]
+
+    # Serializer 인스턴스 생성 시 data 인자를 전달
+    serializer = ReminderSerializer(data=reminders_data, many=True)
+
+    if serializer.is_valid():
+        return Response(serializer.data, status=status.HTTP_200_OK)
+    else:
+        return Response(serializer.errors, status=status.HTTP_404_NOT_FOUND)
+
+@swagger_auto_schema(method='patch',tags=['알림 관련'],operation_summary='알림 확인')
+@swagger_auto_schema(method='delete',tags=['알림 관련'],operation_summary='해당 알림 삭제')
+@api_view(['PATCH','DELETE'])
+def checked_delete_reminders(request,reminder_id):
+    if request.method == 'PATCH':
+        reminder = Reminder.objects.get(id=reminder_id)
+        # user_id 가져오기
+        user_id = reminder.user_id.id
+        reminders = reminder.objects.filter(user_id=user_id)
+        reminders.is_checked = True
+        serializers = ReminderSerializer(reminders,many=True)
+        if serializers.is_valid():
+            return Response(serializers.data,status=status.HTTP_200_OK)
+
+    elif request.method == 'DELETE':
+        reminder = Reminder(id=reminder_id)
+        reminder.delete()
+
+def start_celery_task(request):
+    # 작업 파라미터가 필요 없다면 별도의 파라미터 추출 부분은 생략할 수 있습니다.
+    # Celery 작업 실행
+    result = want_result.delay()
+    # 작업 ID를 클라이언트에 반환
+    return HttpResponse({'task_id': result.id})
 
 
-# @api_view(['GET'])
-# def alarm_list(request, user_id):
-#   deleted_bookmarks = Bookmark.objects.exclude(deleted_at__isnull=False)
+def call_method(request):
+    r = celery_app.send_task('tasks.want_result')
+    #kwargs = {'x': random.randrange(0, 10), 'y': random.randrange(0, 10)
+    return HttpResponse(r.id)
 
 
+def get_status(request, task_id):
+    status = celery_app.AsyncResult(task_id, app=celery_app)
+    return HttpResponse("Status " + str(status.state))
 
+
+def task_result(request, task_id):
+    result = celery_app.AsyncResult(task_id).result
+    return HttpResponse("Result " + str(result))
 
 
 
