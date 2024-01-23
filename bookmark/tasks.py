@@ -1,6 +1,7 @@
 from django.utils import timezone
 from datetime import timedelta, datetime
 
+from accountinfo.models import accountoptions, accountinfo
 from bookmark.models import Bookmark, BookmarkFolder, Reminder
 from celery import Celery
 from django_back.celery import logger
@@ -13,7 +14,6 @@ from celery import shared_task
 @shared_task
 def want_result():
     logger.info('Got Request - Starting work ')
-    thirty_days_ago = timezone.now() - timedelta(days=30)
     try:
         bookmarks = Bookmark.objects.filter(is_connected=False, deleted_at__isnull=True)
     except Bookmark.DoesNotExist:
@@ -23,7 +23,18 @@ def want_result():
         return result
 
     for bookmark in bookmarks:
-        if bookmark.created_at < thirty_days_ago: #bookmark.created_at < thirty_days_ago
+        user_id = bookmark.folder_id.user_id
+        account_info = accountinfo.objects.get(id=user_id.id)  # 기본 키에 따라 수정
+        user_options = accountoptions.objects.get(accountid=account_info.id)
+        option = user_options.bookmarkalertoption
+        alarm_option = 0
+
+        if option == 0:
+             alarm_option = timezone.now() - timedelta(days=15)
+        elif option == 1:
+             alarm_option = timezone.now() - timedelta(days=30)
+
+        if bookmark.created_at < alarm_option: #bookmark.created_at < thirty_days_ago
             time_difference = timezone.now() - bookmark.created_at
             folder_user_id = bookmark.folder_id.user_id
 
