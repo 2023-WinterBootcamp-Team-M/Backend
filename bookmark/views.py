@@ -391,9 +391,9 @@ def toggle_favorite_bookmark(request, bookmark_id):
 def get_check_reminders(request,user_id):
     if request.method == 'GET':
         if Reminder.objects.filter(user_id=user_id, is_checked=False).exists():
-            return Response(status=status.HTTP_200_OK)
+            return Response(1,status=status.HTTP_200_OK)
         else:
-            return Response(status=status.HTTP_404_NOT_FOUND)
+            return Response(0,status=status.HTTP_200_OK)
 
 
     elif request.method == 'DELETE':
