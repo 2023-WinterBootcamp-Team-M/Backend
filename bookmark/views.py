@@ -1,17 +1,14 @@
+from django.http import HttpResponse
+from django_back.celery import app as celery_app
 from django.utils import timezone
-
 from rest_framework import status
-
 from rest_framework.response import Response
-
-
 from accountinfo.models import accountoptions, accountinfo
-
 from bookmark.serializer import *
 from drf_yasg.utils import swagger_auto_schema
 from rest_framework.decorators import api_view
+from .tasks import *
 from bookmark.utils import summary_three, summary_six, call_chatgpt_api, new_bookmark
-
 import environ
 
 
@@ -388,9 +385,67 @@ def toggle_favorite_bookmark(request, bookmark_id):
         bookmark.save()
         return Response({'favorite': bookmark.favorite},status=status.HTTP_200_OK)
 
+@swagger_auto_schema(method='get', tags=['알림 관련'],operation_summary='알림 유무 조회')
+@swagger_auto_schema(method='delete',tags=['알림 관련'],operation_summary='알림 확인')
+@api_view(['GET','DELETE'])
+def get_check_reminders(request,user_id):
+    if request.method == 'GET':
+        if Reminder.objects.filter(user_id=user_id, is_checked=False).exists():
+            return Response(status=status.HTTP_200_OK)
+        else:
+            return Response(status=status.HTTP_404_NOT_FOUND)
 
 
-# @api_view(['GET'])
-# def alarm_list(request, user_id):
-#   deleted_bookmarks = Bookmark.objects.exclude(deleted_at__isnull=False)
+    elif request.method == 'DELETE':
+        reminders = Reminder.objects.filter(user_id=user_id)
+        reminders.update(is_checked=True)  # Use update to efficiently update multiple records
+        serializers = ReminderSerializer(reminders, many=True)
+        return Response(serializers.data, status=status.HTTP_200_OK)
+
+@swagger_auto_schema(method='get',tags=['알림 관련'],operation_summary='알림 목록 조회')
+@api_view(['GET'])
+def reminders_list(request, user_id):
+    reminders = Reminder.objects.filter(user_id=user_id)
+    reminders_data = [ReminderSerializer(reminder).data for reminder in reminders]
+
+    # Serializer 인스턴스 생성 시 data 인자를 전달
+    serializer = ReminderSerializer(data=reminders_data, many=True)
+
+    if serializer.is_valid():
+        return Response(serializer.data, status=status.HTTP_200_OK)
+    else:
+        return Response(serializer.errors, status=status.HTTP_404_NOT_FOUND)
+
+@swagger_auto_schema(method='delete',tags=['알림 관련'],operation_summary='해당 알림 삭제')
+@api_view(['DELETE'])
+def delete_reminders(request,reminder_id):
+    reminder = Reminder.objects.get(id=reminder_id)
+    reminder.delete()
+    return Response({'message': 'delete'}, status=status.HTTP_200_OK)
+
+def start_celery_task(request):
+    # 작업 파라미터가 필요 없다면 별도의 파라미터 추출 부분은 생략할 수 있습니다.
+    # Celery 작업 실행
+    result = want_result.delay()
+    # 작업 ID를 클라이언트에 반환
+    return HttpResponse({'task_id': result.id})
+
+
+def call_method(request):
+    r = celery_app.send_task('tasks.want_result')
+    #kwargs = {'x': random.randrange(0, 10), 'y': random.randrange(0, 10)
+    return HttpResponse(r.id)
+
+
+def get_status(request, task_id):
+    status = celery_app.AsyncResult(task_id, app=celery_app)
+    return HttpResponse("Status " + str(status.state))
+
+
+def task_result(request, task_id):
+    result = celery_app.AsyncResult(task_id).result
+    return HttpResponse("Result " + str(result))
+
+
+
 

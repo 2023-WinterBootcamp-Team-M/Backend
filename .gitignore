@@ -7,7 +7,10 @@ db.sqlite3
 *.pyc
 __pycache__/
 
+celerybeat-schedule
 # Only for Development only
 **/migrations/**
 !**/migrations
 !**/migrations/__init__.py
+
+prometheus/data

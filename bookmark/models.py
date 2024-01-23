@@ -54,3 +54,10 @@ class Bookmark(models.Model):
         if duplicate_bookmarks.exists():
             # 중복된 북마크가 존재하면 ValidationError 발생
             raise ValidationError("Duplicate bookmark found in the same user's folders.")
+
+class Reminder(models.Model):
+    bookmark_name = models.CharField(max_length=20)
+    bookmark_url = models.CharField(max_length=2048)
+    user_id = models.ForeignKey(accountinfo,on_delete=models.CASCADE, db_constraint=False)
+    is_checked = models.BooleanField(default=False)
+    accumulated_days = models.IntegerField()
