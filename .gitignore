@@ -12,3 +12,5 @@ celerybeat-schedule
 **/migrations/**
 !**/migrations
 !**/migrations/__init__.py
+
+prometheus/data
