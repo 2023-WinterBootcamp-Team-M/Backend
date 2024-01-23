@@ -1,27 +1,14 @@
-import random
-
 from django.http import HttpResponse
 from django_back.celery import app as celery_app
-
 from django.utils import timezone
-from django.http import JsonResponse
-from django.shortcuts import render
 from rest_framework import status
-from rest_framework.decorators import api_view
 from rest_framework.response import Response
-
-from accountinfo.models import accountoptions
-
 from accountinfo.models import accountoptions, accountinfo
-
 from bookmark.serializer import *
 from drf_yasg.utils import swagger_auto_schema
 from rest_framework.decorators import api_view
-from bookmark.utils import summary_three, summary_six
-from .models import Reminder
 from .tasks import *
 from bookmark.utils import summary_three, summary_six, call_chatgpt_api, new_bookmark
-
 import environ
 
 
