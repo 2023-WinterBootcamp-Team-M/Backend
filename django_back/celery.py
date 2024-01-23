@@ -11,7 +11,7 @@ app.config_from_object('django.conf:settings', namespace='CELERY')
 app.conf.beat_schedule = {
     'want_result': {
         'task': 'bookmark.tasks.want_result',
-        'schedule': crontab(),
+        'schedule': crontab(hour=9, minute=0),
     },
 }
 

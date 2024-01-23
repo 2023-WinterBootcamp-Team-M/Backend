@@ -405,16 +405,20 @@ def get_check_reminders(request,user_id):
 @swagger_auto_schema(method='get',tags=['알림 관련'],operation_summary='알림 목록 조회')
 @api_view(['GET'])
 def reminders_list(request, user_id):
-    reminders = Reminder.objects.filter(user_id=user_id)
-    reminders_data = [ReminderSerializer(reminder).data for reminder in reminders]
+    try:
+        reminders = Reminder.objects.filter(user_id=user_id)
+    # reminders_data = [ReminderSerializer(reminder).data for reminder in reminders]
 
     # Serializer 인스턴스 생성 시 data 인자를 전달
-    serializer = ReminderSerializer(data=reminders_data, many=True)
+        serializer = ReminderSerializer(reminders, many=True)
 
-    if serializer.is_valid():
         return Response(serializer.data, status=status.HTTP_200_OK)
-    else:
-        return Response(serializer.errors, status=status.HTTP_404_NOT_FOUND)
+    except Reminder.DoesNotExist:
+        return Response({'error': 'Folder not found.'},status=status.HTTP_404_NOT_FOUND)
+    # if serializer.is_valid():
+    #     return Response(serializer.data, status=status.HTTP_200_OK)
+    # else:
+    #     return Response(serializer.errors, status=status.HTTP_404_NOT_FOUND)
 
 @swagger_auto_schema(method='delete',tags=['알림 관련'],operation_summary='해당 알림 삭제')
 @api_view(['DELETE'])

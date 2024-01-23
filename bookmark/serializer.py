@@ -10,7 +10,7 @@ class FolderSerializer(serializers.ModelSerializer):
 class BookmarkSerializer(serializers.ModelSerializer):
     class Meta:
         model = Bookmark
-        fields = '__all__'
+        fields =  '__all__'
 class ReminderSerializer(serializers.ModelSerializer):
     class Meta:
         model = Reminder
