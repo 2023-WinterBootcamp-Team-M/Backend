@@ -23,13 +23,14 @@ def want_result():
         return result
 
     for bookmark in bookmarks:
-        if bookmark.created_at > thirty_days_ago:
+        if bookmark.created_at < thirty_days_ago: #bookmark.created_at < thirty_days_ago
             time_difference = timezone.now() - bookmark.created_at
             folder_user_id = bookmark.folder_id.user_id
 
             try:
                 exist_reminder = Reminder.objects.get(bookmark_url=bookmark.url)
                 exist_reminder.accumulated_days = time_difference.days
+                exist_reminder.is_checked = False
                 exist_reminder.save()
             except Reminder.DoesNotExist:
                 reminder = Reminder(

@@ -17,9 +17,9 @@ urlpatterns = [
     path('favorite/bookmarks/<int:user_id>',favorite_bookmark_list,name='favorite_bookmark_list'),
     path('favorite/<int:bookmark_id>', toggle_favorite_bookmark, name='toggle_favorite_bookmark'),
 
-    path('reminders/<int:user_id>',has_reminders,name='has_reminders'),
+    path('reminders/status/<int:user_id>',get_check_reminders,name='has_reminders'),
     path('reminders/list/<int:user_id>',reminders_list, name='reminders_list'),
-    path('reminders//<int:reminder_id>',checked_delete_reminders,name='checked_delete_bookmarks'),
+    path('reminders/<int:reminder_id>',delete_reminders,name='checked_delete_bookmarks'),
     #path('bookmarks/alarms?userId={user_id}',)
     # path('bookmarks', create_bookmark, name=''),
     path('test',start_celery_task,name='start_celery_task'),
