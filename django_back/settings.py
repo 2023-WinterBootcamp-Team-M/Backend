@@ -144,17 +144,19 @@ STATIC_URL = 'static/'
 # https://docs.djangoproject.com/en/4.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 
 CORS_ORIGIN_ALLOW_ALL = True
+CORS_ORIGIN_WHIELIST = ['*']
 
 ALLOWED_HOSTS = ['127.0.0.1',
-                 '127.0.0.1:8000',
                  'localhost',
-                 'localhost:8000',
                  'host.docker.internal',
-                 'host.docker.internal:8000',
                  'node-exporter:9100',
                  'prometheus:9090',
+                 'cliptab.site',
+                 'backend',
+                 '13.124.232.242'
                  ]
 
 CELERY_BROKER_URL = 'amqp://guest:guest@rabbitmq:5672/'
