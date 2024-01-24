@@ -148,13 +148,11 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 CORS_ORIGIN_ALLOW_ALL = True
 
 ALLOWED_HOSTS = ['127.0.0.1',
-                 '127.0.0.1:8000',
                  'localhost',
-                 'localhost:8000',
                  'host.docker.internal',
-                 'host.docker.internal:8000',
                  'node-exporter:9100',
                  'prometheus:9090',
+                 'backend',
                  ]
 
 CELERY_BROKER_URL = 'amqp://guest:guest@rabbitmq:5672/'
