@@ -8,7 +8,7 @@ from bookmark.serializer import *
 from drf_yasg.utils import swagger_auto_schema
 from rest_framework.decorators import api_view
 from .tasks import *
-from bookmark.utils import summary_three, summary_six, call_chatgpt_api, new_bookmark
+from bookmark.utils import *
 import environ
 
 
@@ -163,7 +163,7 @@ def create_classify_bookmark(request, user_id):
 
     user_instance = accountinfo.objects.get(id=user_id)
     # 같은 폴더 있으면
-    if BookmarkFolder.objects.filter(name=category,user_id=user_instance).exists():
+    if BookmarkFolder.objects.filter(name=category,user_id=user_instance, deleted_at__isnull=True).exists():
         folder = BookmarkFolder.objects.get(name=category)
         bookmark = new_bookmark(bookmark_name,bookmark_url,folder.id)
     else:
@@ -213,7 +213,7 @@ def create_bookmark(request):
 
     short_summary = summary_three(url)
     long_summary = summary_six(url)
-
+    icon = icon_url(url)
 
     serializer = BookmarkSerializer(data=data)
     # 직렬화할 데이터에 short_summary와 long_summary 추가
@@ -223,8 +223,11 @@ def create_bookmark(request):
         serializer.validated_data['short_summary'] = short_summary
         serializer.validated_data['long_summary'] = long_summary
 
-        # if url.endswith('.com/'):
-        #     serializer.validated_data['icon'] = url + 'favicon.ico'
+        # icon이 None값이 아니면 값 넣어주기
+        # None이면 default 값으로 처리
+
+        if icon is not None:
+            serializer.validated_data['icon'] = icon
 
         serializer.save()
         return Response(serializer.data, status=status.HTTP_201_CREATED)
@@ -270,9 +273,13 @@ def update_delete_bookmark(request, folder_id, bookmark_id):
                         {'error': 'This name is already associated with another bookmark in the same folder.'},
                         status=status.HTTP_400_BAD_REQUEST)
 
+                icon = icon_url(new_url)
+
                 if 'url' in request.data:
                     serializer.validated_data['short_summary'] = summary_three(new_url)
                     serializer.validated_data['long_summary'] = summary_six(new_url)
+                    if icon is not None:
+                        serializer.validated_data['icon'] = icon
 
                 serializer.validated_data['updated_at'] = timezone.now()
                 # 유효성 검사를 통과하고 중복이 없으면 저장
@@ -295,6 +302,9 @@ def update_delete_bookmark(request, folder_id, bookmark_id):
                 # 삭제되지 않은 경우에만 처리
                 bookmark.deleted_at = timezone.now()
                 bookmark.save()
+                # if Reminder.objects.get(bookmark_url=bookmark.url).exists():
+                #     reminder = Reminder.objects.get(bookmark_url=bookmark.url)
+                #     reminder.delete()
 
                 serializers = BookmarkSerializer(bookmark)
 
@@ -427,29 +437,9 @@ def delete_reminders(request,reminder_id):
     reminder.delete()
     return Response({'message': 'delete'}, status=status.HTTP_200_OK)
 
-def start_celery_task(request):
-    # 작업 파라미터가 필요 없다면 별도의 파라미터 추출 부분은 생략할 수 있습니다.
-    # Celery 작업 실행
-    result = want_result.delay()
-    # 작업 ID를 클라이언트에 반환
-    return HttpResponse({'task_id': result.id})
-
-
-def call_method(request):
-    r = celery_app.send_task('tasks.want_result')
-    #kwargs = {'x': random.randrange(0, 10), 'y': random.randrange(0, 10)
-    return HttpResponse(r.id)
-
-
-def get_status(request, task_id):
-    status = celery_app.AsyncResult(task_id, app=celery_app)
-    return HttpResponse("Status " + str(status.state))
-
-
-def task_result(request, task_id):
-    result = celery_app.AsyncResult(task_id).result
-    return HttpResponse("Result " + str(result))
-
-
-
-
+@swagger_auto_schema(method='post',tags=['아이콘 관련'],operation_summary='아이콘 추출 테스트')
+@api_view(['POST'])
+def url_icon_test(request):
+    url = request.data.get('url')
+    icon = icon_url(url)
+    return Response({'icon':icon})

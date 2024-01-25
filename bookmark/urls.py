@@ -23,8 +23,5 @@ urlpatterns = [
     path('reminders/<int:reminder_id>',delete_reminders,name='checked_delete_bookmarks'),
     #path('bookmarks/alarms?userId={user_id}',)
     # path('bookmarks', create_bookmark, name=''),
-    path('test',start_celery_task,name='start_celery_task'),
-    path('call',call_method),
-    path('status/<task_id>',get_status),
-    path('result/<task_id>',task_result)
+    path('icon',url_icon_test)
 ]
