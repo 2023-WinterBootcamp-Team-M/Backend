@@ -27,7 +27,7 @@ jobs:
     - name: Verify MySQL connection
       run: |
         mysql --version
-        mysql -u ${{secrets.MY_ROOT_USER}} -p ${{secrets.MYSQL_ROOT_PASSWORD}}
+        mysql --host 127.0.0.1 --port 3306 -u ${{secrets.MY_ROOT_USER}} -p${{secrets.MYSQL_ROOT_PASSWORD}}
 
     - name: Set up Python 3.10.0
       uses: actions/setup-python@v2
