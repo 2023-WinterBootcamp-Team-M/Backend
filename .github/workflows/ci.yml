@@ -29,10 +29,10 @@ jobs:
         mysql --version
         mysql --host 127.0.0.1 --port 3306 -u ${{secrets.MYSQL_ROOT_USER}} -p${{secrets.MYSQL_ROOT_PASSWORD}}
 
-    - name: Set up Python 3.10.0
+    - name: Set up Python 3.10.13
       uses: actions/setup-python@v2
       with:
-        python-version: 3.10.0
+        python-version: 3.10.13
 
     - name: Create db env file
       run: |
