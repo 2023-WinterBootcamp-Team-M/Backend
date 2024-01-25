@@ -45,4 +45,6 @@ jobs:
     - name: Create bookmark env file
       run: |
         echo "{{ secrets.BOOKMARK_ENV_FILE}}" > ./bookmark/.env
-        
+
+
+
