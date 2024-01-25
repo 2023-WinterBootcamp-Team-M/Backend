@@ -38,7 +38,7 @@ jobs:
       run: |
         echo "${{ secrets.MySql_ENV_FILE}}" > ./db/.env
 
-    - name: Create django_back file'
+    - name: Create django_back file
       run: |
         echo "${{ secrets.Django_back_ENV_FILE }} > ./django_back/.env
 
