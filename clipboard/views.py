@@ -41,7 +41,7 @@ class DeleteAllImagesView(APIView):
     @swagger_auto_schema(
         operation_description="클립보드 비우기 API",
         operation_summary="클립보드 비우기",
-        tags=["Clipboard API"],
+        tags=["클립보드 관련"],
         operation_id="delete_all_images"
     )
     def delete(self, request, clipboard_id):
@@ -62,7 +62,7 @@ class GetClipboardView(APIView):
     @swagger_auto_schema(
         operation_description="클립보드 조회 API",
         operation_summary="클립보드 조회",
-        tags=["Clipboard API"],
+        tags=["클립보드 관련"],
         operation_id="clipboard_list",
         responses={200: ClipboardResponseSerializer()}
     )
@@ -90,7 +90,7 @@ class PostClipboardView(APIView):
     @swagger_auto_schema(
         operation_description="클립보드 이미지 크롤링 API",
         operation_summary="클립보드 이미지 크롤링",
-        tags=["Clipboard API"],
+        tags=["클립보드 관련"],
         operation_id="clipboard_images_parsing",
         request_body=PostClipboardRequestSerializer,
         responses={200: ClipboardResponseSerializer()}
