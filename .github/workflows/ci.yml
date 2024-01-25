@@ -36,11 +36,11 @@ jobs:
 
     - name: Create db env file
       run: |
-        echo "${{ secrets.MySql_ENV_FILE}}" > ./db/.env
+        echo "${{ secrets.Db_ENV_FILE}}" > ./db/.env
 
     - name: Create django_back file
       run: |
-        echo "${{ secrets.Django_back_ENV_FILE }} > ./django_back/.env
+        echo "${{ secrets.Django_back_ENV_FILE }}" > ./django_back/.env
 
     - name: Create bookmark env file
       run: |
