@@ -437,30 +437,9 @@ def delete_reminders(request,reminder_id):
     reminder.delete()
     return Response({'message': 'delete'}, status=status.HTTP_200_OK)
 
-
+@swagger_auto_schema(method='post',tags=['아이콘 관련'],operation_summary='아이콘 추출 테스트')
 @api_view(['POST'])
 def url_icon_test(request):
     url = request.data.get('url')
-
-    try:
-        favicon_url = get_favicon(url)
-
-        if favicon_url.startswith("/"):
-            favicon_url = "https://" + extract_domain_from_url(url) + favicon_url
-
-            if check_favicon_url(favicon_url):
-                return Response({'icon': favicon_url})
-            else:
-                return Response({'None domain favicon'})
-        else:
-            if check_favicon_url(favicon_url):
-                return Response({'icon': favicon_url})
-            else:
-                return Response({'None general'})
-    except:
-        favicon_url = "https://" + extract_domain_from_url(url) + '/favicon.ico'
-        if check_favicon_url(favicon_url):
-            return Response({'icon': favicon_url})
-        else:
-            return Response({'None Except'})
-
+    icon = icon_url(url)
+    return Response({'icon':icon})

@@ -238,31 +238,6 @@ def summary_six(url):
     except Exception as e:
         return {'error': str(e)}
 
-
-def get_favicon(url):
-    try:
-        response = requests.get(url)
-        response.raise_for_status()  # Check for HTTP errors
-
-        soup = BeautifulSoup(response.text, 'html.parser')
-        icon_link =  soup.find("link", rel="shortcut icon") or soup.find('link', rel='icon')
-
-        if icon_link:
-            favicon_url = icon_link.get('href')
-            return favicon_url
-        else:
-            return None
-            # return url + '/favicon.ico'
-    except:
-        return None
-
-# 도메인 추출
-def extract_domain_from_url(url):
-    parsed_url = urlparse(url)
-    domain = parsed_url.netloc
-    return domain
-
-# favicon url 유효성 확인
 def check_favicon_url(url):
     try:
         response = requests.get(url)
@@ -275,27 +250,17 @@ def check_favicon_url(url):
     except:
         return 0
 
-# url 유효성 검사를 통해 icon url 결정
 def icon_url(url):
-    try:
-        favicon_url = get_favicon(url)
+    favicon = "http://www.google.com/s2/favicons?domain=" + url
+    if check_favicon_url(favicon):
+        return favicon
+    else:
+        return None
 
-        if favicon_url.startswith("/"):
-            favicon_url = "https://" + extract_domain_from_url(url) + favicon_url
+# 도메인 추출
+# def extract_domain_from_url(url):
+#     parsed_url = urlparse(url)
+#     domain = parsed_url.netloc
+#     return domain
 
-            if check_favicon_url(favicon_url):
-                return favicon_url
-            else:
-                return None
-        else:
-            if check_favicon_url(favicon_url):
-                return favicon_url
-            else:
-                return None
-    except:
-        favicon_url = "https://" + extract_domain_from_url(url) + '/favicon.ico'
-        if check_favicon_url(favicon_url):
-            return favicon_url
-        else:
-            return None
 
