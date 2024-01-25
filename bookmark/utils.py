@@ -1,10 +1,13 @@
 import re
 import json
-import requests
-from bs4 import BeautifulSoup
 import openai
 import environ
+import requests
+import urllib
+import urllib.request
+from urllib.parse import urlparse
 
+from bs4 import BeautifulSoup
 from accountinfo.models import accountinfo
 from bookmark.models import BookmarkFolder, Bookmark
 
@@ -89,9 +92,13 @@ def new_bookmark(bookmark_name,bookmark_url, folder_id):
     folder_instance = BookmarkFolder.objects.get(id=folder_id)
     short_summary = summary_three(bookmark_url)
     long_summary = summary_six(bookmark_url)
+    icon = icon_url(bookmark_url)
 
     bookmark = Bookmark(name=bookmark_name,url=bookmark_url,folder_id=folder_instance,
                         short_summary=short_summary, long_summary=long_summary)
+    if icon is not None:
+        bookmark.icon = icon
+
     bookmark.clean()
     bookmark.save()
     return bookmark
@@ -230,3 +237,65 @@ def summary_six(url):
         return summary_content
     except Exception as e:
         return {'error': str(e)}
+
+
+def get_favicon(url):
+    try:
+        response = requests.get(url)
+        response.raise_for_status()  # Check for HTTP errors
+
+        soup = BeautifulSoup(response.text, 'html.parser')
+        icon_link =  soup.find("link", rel="shortcut icon") or soup.find('link', rel='icon')
+
+        if icon_link:
+            favicon_url = icon_link.get('href')
+            return favicon_url
+        else:
+            return None
+            # return url + '/favicon.ico'
+    except:
+        return None
+
+# 도메인 추출
+def extract_domain_from_url(url):
+    parsed_url = urlparse(url)
+    domain = parsed_url.netloc
+    return domain
+
+# favicon url 유효성 확인
+def check_favicon_url(url):
+    try:
+        response = requests.get(url)
+        # HTTP 상태 코드가 200이면 페이지가 정상적으로 로드된 것으로 판단할 수 있습니다.
+        if response.status_code >= 400 and response.status_code < 500:
+            return 0
+            # 여기에서 응답의 내용을 확인하고 원하는 값이 있는지 확인할 수 있습니다.
+        else:
+            return 1
+    except:
+        return 0
+
+# url 유효성 검사를 통해 icon url 결정
+def icon_url(url):
+    try:
+        favicon_url = get_favicon(url)
+
+        if favicon_url.startswith("/"):
+            favicon_url = "https://" + extract_domain_from_url(url) + favicon_url
+
+            if check_favicon_url(favicon_url):
+                return favicon_url
+            else:
+                return None
+        else:
+            if check_favicon_url(favicon_url):
+                return favicon_url
+            else:
+                return None
+    except:
+        favicon_url = "https://" + extract_domain_from_url(url) + '/favicon.ico'
+        if check_favicon_url(favicon_url):
+            return favicon_url
+        else:
+            return None
+
