@@ -59,7 +59,7 @@ jobs:
           host: ${{secrets.AWS_HOST}}
           username: ${{secrets.AWS_USERNAME}}
           key: ${{ secrets.AWS_KEY_PEM }}
-          envs: GITHUB_SHA
+#          envs: GITHUB_SHA
           script: |
               cd backend
               git pull
