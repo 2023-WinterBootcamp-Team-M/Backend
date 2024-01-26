@@ -38,7 +38,7 @@ jobs:
 
       - name: Setting .env
         run: |
-          echo "${{ secrets.ENV }}" >> .env
+          echo "${{ secrets.DJANGO_BACK_ENV_FILE }}" >> .env
           cat .env
 
       - name: Build docker images
