@@ -1,19 +1,14 @@
 name: Django CD
 
 on:
-  push:
-    branches: [ "develop" ]
   pull_request:
-    branches: [ "develop" ]
-
-#  pull_request:
-#    types:
-#      - closed
-#    branches: [ develop ]
+    types:
+      - closed
+    branches: [ develop ]
 
 jobs:
   cd:
-    #if: github.event.pull_request.merged == true
+    if: github.event.pull_request.merged == true
     runs-on: ubuntu-latest
 
     steps:
