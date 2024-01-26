@@ -58,7 +58,7 @@ jobs:
         with:
           host: ${{secrets.AWS_HOST}}
           username: ${{secrets.AWS_USERNAME}}
-          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          key: ${{ secrets.AWS_KEY_PEM }}
           port: ${{ secrets.PORT }}
           #          envs: GITHUB_SHA
           script: |
