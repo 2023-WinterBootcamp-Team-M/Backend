@@ -40,6 +40,10 @@ jobs:
         run: |
           echo "${{ secrets.DJANGO_BACK_ENV_FILE }}" >> .env
           cat .env
+      
+      - name: Create db env file
+        run: |
+          echo "${{ secrets.DB_ENV_FILE}}" > ./db/.env
 
       - name: Build docker images
         run: |
