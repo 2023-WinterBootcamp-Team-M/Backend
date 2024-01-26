@@ -47,7 +47,7 @@ jobs:
           docker images
 
       - name: Push docker images
-        run: docker-compose -f docker-compose.prod.yml push
+        run: docker-compose -f docker-compose.yml push
 
       - name: Connect to EC2 using SSH
         uses: appleboy/ssh-action@master
@@ -59,6 +59,6 @@ jobs:
           script: |
               cd github-actions-session
               git pull
-              sudo docker-compose -f docker-compose.prod.yml down
-              sudo docker-compose -f docker-compose.prod.yml pull
-              sudo docker-compose -f docker-compose.prod.yml up -d --build
+              sudo docker-compose -f docker-compose.yml down
+              sudo docker-compose -f docker-compose.yml pull
+              sudo docker-compose -f docker-compose.yml up -d --build
