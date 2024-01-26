@@ -1,9 +1,14 @@
 name: Django CD
 on:
+  push:
+    branches: [ "develop" ]
   pull_request:
+    branches: [ "develop" ]
+
+#  pull_request:
 #    types:
 #      - closed
-    branches: [ develop ]
+#    branches: [ develop ]
 
 jobs:
   cd:
