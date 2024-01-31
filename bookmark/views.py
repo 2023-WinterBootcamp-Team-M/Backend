@@ -164,7 +164,7 @@ def create_classify_bookmark(request, user_id):
     user_instance = accountinfo.objects.get(id=user_id)
     # 같은 폴더 있으면
     if BookmarkFolder.objects.filter(name=category,user_id=user_instance, deleted_at__isnull=True).exists():
-        folder = BookmarkFolder.objects.get(name=category)
+        folder = BookmarkFolder.objects.get(name=category, deleted_at__isnull=True)
         bookmark = new_bookmark(bookmark_name,bookmark_url,folder.id)
     else:
         folder = BookmarkFolder(name=category, user_id=user_instance)
